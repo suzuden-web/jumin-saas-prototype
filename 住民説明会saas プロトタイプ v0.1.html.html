@@ -329,175 +329,11 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-          <button class="btn btn-o" onclick="goStep(1)">← 前のステップ</button>
+          <button class="btn btn-o">← 前のステップ</button>
           <div style="display:flex;gap:8px">
             <button class="btn btn-o">下書き保存</button>
-            <button class="btn btn-p" onclick="goStep(3)">次へ：説明会設定 →</button>
+            <button class="btn btn-p" onclick="showToast('入力内容を保存しました。ステップ3に進んでください。','success')">次へ：説明会設定 →</button>
           </div>
-        </div>
-      </div>
-
-      <!-- SETUP STEP 3 -->
-      <div class="screen" id="screen-setup3">
-        <div class="ph"><div class="ph-title">初期設定</div><div class="ph-sub">説明会セッションの情報を入力します。入力した情報は全出力物に自動反映されます。</div></div>
-        <div class="stepper">
-          <div class="step done"><div class="step-c">✓</div><div class="step-lbl">事業者情報</div></div>
-          <div class="step-ln"></div>
-          <div class="step done"><div class="step-c">✓</div><div class="step-lbl">発電所情報</div></div>
-          <div class="step-ln"></div>
-          <div class="step active"><div class="step-c">3</div><div class="step-lbl">説明会設定</div></div>
-          <div class="step-ln"></div>
-          <div class="step pend"><div class="step-c">4</div><div class="step-lbl">確認・完了</div></div>
-        </div>
-        <div class="ib blue">
-          <div class="it">ステップ 3 / 4　説明会セッション設定</div>
-          説明会の日時・会場・対象区域を入力します。入力内容をもとにスケジュール表・チラシが自動生成されます。
-        </div>
-        <div class="card">
-          <div class="cb">
-            <div class="fsec">
-              <div class="fsec-t">📅 説明会日時・会場</div>
-              <div class="fg">
-                <div class="fgrp">
-                  <div class="flbl">説明会開催日 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div>
-                  <input class="fi" type="date" value="2026-05-18">
-                </div>
-                <div class="fgrp">
-                  <div class="flbl">開始時刻 <span class="rbdg">必須</span></div>
-                  <input class="fi" type="time" value="14:00">
-                </div>
-                <div class="fgrp">
-                  <div class="flbl">会場名称 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div>
-                  <input class="fi" type="text" placeholder="例：横手市民会館 大ホール">
-                </div>
-                <div class="fgrp">
-                  <div class="flbl">会場住所 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div>
-                  <input class="fi" type="text" placeholder="例：秋田県横手市中央町8-2">
-                </div>
-              </div>
-            </div>
-            <div class="fsec">
-              <div class="fsec-t">📢 案内チラシ配布</div>
-              <div class="fg">
-                <div class="fgrp">
-                  <div class="flbl">チラシ配布予定日 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div>
-                  <input class="fi" type="date" value="2026-04-24" id="notice-date" oninput="checkNotice()">
-                  <div class="fhint" id="notice-hint" style="color:var(--green)">✓ 説明会の24日前　METI R-001 適合</div>
-                </div>
-                <div class="fgrp">
-                  <div class="flbl">配布方法 <span class="rbdg">必須</span></div>
-                  <select class="fi">
-                    <option>回覧板</option>
-                    <option>ポスト投函</option>
-                    <option>回覧板＋ポスト投函</option>
-                    <option>その他</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div class="fsec">
-              <div class="fsec-t">🗺️ 対象区域・担当者</div>
-              <div class="fg">
-                <div class="fgrp s2">
-                  <div class="flbl">対象区域の説明 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div>
-                  <textarea class="fi" rows="3" placeholder="例：発電所敷地から半径500m以内の横手市大雄地区の住民の方々">　</textarea>
-                  <div class="fhint">住民への案内チラシ・説明資料に記載されます。</div>
-                </div>
-                <div class="fgrp">
-                  <div class="flbl">説明会担当者名 <span class="rbdg">必須</span></div>
-                  <input class="fi" type="text" placeholder="例：田中 誠一">
-                </div>
-                <div class="fgrp">
-                  <div class="flbl">役割分担</div>
-                  <input class="fi" type="text" placeholder="例：司会：田中、資料説明：鈴木">
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-          <button class="btn btn-o" onclick="goStep(2)">← 前のステップ</button>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-o">下書き保存</button>
-            <button class="btn btn-p" onclick="goStep(4)">次へ：確認・完了 →</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SETUP STEP 4 -->
-      <div class="screen" id="screen-setup4">
-        <div class="ph"><div class="ph-title">初期設定</div><div class="ph-sub">入力内容を確認して初期設定を完了します。</div></div>
-        <div class="stepper">
-          <div class="step done"><div class="step-c">✓</div><div class="step-lbl">事業者情報</div></div>
-          <div class="step-ln"></div>
-          <div class="step done"><div class="step-c">✓</div><div class="step-lbl">発電所情報</div></div>
-          <div class="step-ln"></div>
-          <div class="step done"><div class="step-c">✓</div><div class="step-lbl">説明会設定</div></div>
-          <div class="step-ln"></div>
-          <div class="step active"><div class="step-c">4</div><div class="step-lbl">確認・完了</div></div>
-        </div>
-
-        <div class="ib green" style="margin-bottom:20px">
-          <div class="it">入力内容の確認</div>
-          以下の内容で初期設定を完了します。この情報をもとに全出力物が自動生成されます。
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-          <div class="card" style="margin-bottom:0">
-            <div class="ch"><div class="ct">事業者情報</div><button class="btn btn-o" style="font-size:11px;padding:4px 10px" onclick="goStep(1)">編集</button></div>
-            <div class="cb" style="padding:0">
-              <table class="dt">
-                <tbody>
-                  <tr><td style="color:var(--gray5);width:40%">事業者名</td><td>株式会社ソーラーエナジー</td></tr>
-                  <tr><td style="color:var(--gray5)">代表者名</td><td>鈴木 一郎</td></tr>
-                  <tr><td style="color:var(--gray5)">連絡先TEL</td><td>018-XXX-XXXX</td></tr>
-                  <tr><td style="color:var(--gray5)">連絡先メール</td><td>info@solar-energy.co.jp</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card" style="margin-bottom:0">
-            <div class="ch"><div class="ct">発電所情報</div><button class="btn btn-o" style="font-size:11px;padding:4px 10px" onclick="goStep(2)">編集</button></div>
-            <div class="cb" style="padding:0">
-              <table class="dt">
-                <tbody>
-                  <tr><td style="color:var(--gray5);width:40%">発電所名</td><td>奥羽山系 太陽光発電所</td></tr>
-                  <tr><td style="color:var(--gray5)">所在地</td><td>秋田県横手市 大雄字山根</td></tr>
-                  <tr><td style="color:var(--gray5)">発電出力</td><td>4,200kW</td></tr>
-                  <tr><td style="color:var(--gray5)">工事期間</td><td>2026年9月〜2027年3月</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="ch"><div class="ct">説明会セッション</div><button class="btn btn-o" style="font-size:11px;padding:4px 10px" onclick="goStep(3)">編集</button></div>
-          <div class="cb" style="padding:0">
-            <table class="dt">
-              <tbody>
-                <tr><td style="color:var(--gray5);width:30%">開催日時</td><td>2026年5月18日　14:00〜</td></tr>
-                <tr><td style="color:var(--gray5)">会場</td><td>横手市民会館 大ホール</td></tr>
-                <tr><td style="color:var(--gray5)">チラシ配布予定日</td><td>2026年4月24日（説明会24日前）<span class="tag t-g" style="margin-left:8px">METI適合</span></td></tr>
-                <tr><td style="color:var(--gray5)">対象区域</td><td>発電所敷地から半径500m以内の横手市大雄地区</td></tr>
-                <tr><td style="color:var(--gray5)">担当者</td><td>田中 誠一</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="ch"><div class="ct">METI準拠チェック結果</div></div>
-          <div class="cb">
-            <div class="cl">
-              <div class="ci ok"><div class="ci-ic">✓</div><div><div class="ci-txt">全てのMETI必須項目が入力済みです</div><div class="ci-rule">ERROR：0件　WARNING：0件　OK：7件</div></div><span class="tag t-g">準拠確認済み</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-          <button class="btn btn-o" onclick="goStep(3)">← 前のステップ</button>
-          <button class="btn btn-p" style="padding:12px 32px;font-size:14px" onclick="completeSetup()">✓　初期設定を完了する</button>
         </div>
       </div>
 
@@ -629,7 +465,7 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
 <div class="toast" id="toast"></div>
 
 <script>
-const TITLES={dashboard:'ダッシュボード',setup:'初期設定',setup3:'初期設定',setup4:'初期設定',compliance:'METI準拠チェック',schedule:'スケジュール管理',output:'ドキュメント出力'};
+const TITLES={dashboard:'ダッシュボード',setup:'初期設定',compliance:'METI準拠チェック',schedule:'スケジュール管理',output:'ドキュメント出力'};
 function setNav(el,screen){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
@@ -637,41 +473,6 @@ function setNav(el,screen){
   const sc=document.getElementById('screen-'+screen);
   if(sc)sc.classList.add('active');
   document.getElementById('tb-title').textContent=TITLES[screen]||'';
-}
-function goStep(n){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  const map={1:'screen-setup',2:'screen-setup',3:'screen-setup3',4:'screen-setup4'};
-  document.getElementById(map[n]||'screen-setup').classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
-  document.querySelectorAll('.nav-item')[1].classList.add('active');
-  document.getElementById('tb-title').textContent='初期設定';
-}
-function checkNotice(){
-  const nd=document.getElementById('notice-date');
-  const hint=document.getElementById('notice-hint');
-  if(!nd||!hint)return;
-  const session=new Date('2026-05-18');
-  const notice=new Date(nd.value);
-  const diff=Math.round((session-notice)/(1000*60*60*24));
-  if(diff>=14){
-    hint.style.color='var(--green)';
-    hint.textContent='✓ 説明会の'+diff+'日前　METI R-001 適合';
-  }else{
-    hint.style.color='var(--red)';
-    hint.textContent='⚠ 説明会の'+diff+'日前　METI R-001 違反（14日前以上が必要）';
-  }
-}
-function completeSetup(){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-dashboard').classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
-  document.querySelectorAll('.nav-item')[0].classList.add('active');
-  document.getElementById('tb-title').textContent='ダッシュボード';
-  const badge=document.querySelector('.nav-badge');
-  if(badge)badge.style.display='none';
-  const pill=document.querySelector('.cp-pill');
-  if(pill){pill.className='cp-pill ok';pill.innerHTML='<div class="cp-dot" style="background:var(--green);animation:none"></div>METI準拠：適合';}
-  showToast('初期設定が完了しました。ダッシュボードに戻ります。','success');
 }
 function showModal(id){document.getElementById('modal-'+id).classList.add('open')}
 function closeModal(id){document.getElementById('modal-'+id).classList.remove('open')}
