@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>住民説明会SaaS — プロトタイプ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0D1B2A;--navy2:#162338;--blue:#1A56DB;--blue-light:#EBF5FF;
+  --green:#057A55;--green-light:#DEF7EC;--amber:#C27803;--amber-light:#FDF6B2;
+  --red:#C81E1E;--red-light:#FDE8E8;
+  --gray0:#F9FAFB;--gray1:#F3F4F6;--gray2:#E5E7EB;--gray3:#D1D5DB;
+  --gray4:#9CA3AF;--gray5:#6B7280;--gray6:#374151;--white:#FFFFFF;--text:#111827;
+  --mono:'DM Mono',monospace;--sans:'Noto Sans JP',sans-serif;
+  --radius:8px;--shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size:14px;line-height:1.6}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;background:var(--navy);display:flex;flex-direction:column;flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:56px;background:var(--white);border-bottom:1px solid var(--gray2);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0}
+.content{flex:1;overflow-y:auto;padding:28px 32px}
+/* sidebar */
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo .lm{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.08em;margin-bottom:4px}
+.sb-logo .ln{font-size:15px;font-weight:700;color:var(--white);letter-spacing:-.02em}
+.sb-proj{padding:12px 14px;margin:12px 10px 0;background:rgba(255,255,255,.06);border-radius:6px;cursor:pointer}
+.sb-proj .pl{font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.sb-proj .pn{font-size:13px;color:var(--white);font-weight:500}
+.sb-proj .ps{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.nav{padding:16px 10px;flex:1}
+.nav-sec{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.1em;text-transform:uppercase;padding:0 10px;margin-bottom:6px;margin-top:16px}
+.nav-sec:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;cursor:pointer;color:rgba(255,255,255,.6);font-size:13px;transition:all .15s;margin-bottom:1px}
+.nav-item:hover{background:rgba(255,255,255,.07);color:var(--white)}
+.nav-item.active{background:var(--blue);color:var(--white);font-weight:500}
+.nav-icon{width:16px;height:16px;opacity:.8;flex-shrink:0}
+.nav-item.active .nav-icon{opacity:1}
+.nav-badge{margin-left:auto;background:var(--red);color:white;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:10px;font-weight:500}
+.sb-foot{padding:14px 10px;border-top:1px solid rgba(255,255,255,.08)}
+.u-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:6px}
+.u-av{width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:600;flex-shrink:0}
+.u-name{font-size:12px;color:rgba(255,255,255,.7)}
+.u-co{font-size:11px;color:rgba(255,255,255,.35)}
+/* topbar */
+.tb-title{font-size:15px;font-weight:600;color:var(--text)}
+.tb-sp{flex:1}
+.cp-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.cp-pill.warn{background:var(--amber-light);color:var(--amber)}
+.cp-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:var(--sans)}
+.btn-p{background:var(--blue);color:white}.btn-p:hover{background:#1447B3}
+.btn-o{background:white;color:var(--gray6);border:1px solid var(--gray2)}.btn-o:hover{border-color:var(--gray4);background:var(--gray0)}
+/* screens */
+.screen{display:none}.screen.active{display:block}
+/* page header */
+.ph{margin-bottom:24px}
+.ph-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.03em}
+.ph-sub{font-size:13px;color:var(--gray5);margin-top:3px}
+/* stats */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.sc{background:white;border:1px solid var(--gray2);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.sc-lbl{font-size:11px;color:var(--gray5);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.sc-val{font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.04em;font-family:var(--mono)}
+.sc-sub{font-size:12px;color:var(--gray4);margin-top:4px}
+.sc.hi{border-color:var(--blue);background:var(--blue-light)}.sc.hi .sc-val{color:var(--blue)}
+/* card */
+.card{background:white;border:1px solid var(--gray2);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.ch{padding:16px 20px 14px;border-bottom:1px solid var(--gray1);display:flex;align-items:center;gap:10px}
+.ct{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.cb{padding:16px 20px}
+/* check items */
+.cl{display:flex;flex-direction:column;gap:8px}
+.ci{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:6px;border:1px solid transparent}
+.ci.err{background:var(--red-light);border-color:#FCA5A5}
+.ci.wrn{background:var(--amber-light);border-color:#FCD34D}
+.ci.ok{background:var(--green-light);border-color:#6EE7B7}
+.ci-ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px}
+.ci.err .ci-ic{background:var(--red);color:white}.ci.wrn .ci-ic{background:var(--amber);color:white}.ci.ok .ci-ic{background:var(--green);color:white}
+.ci-txt{font-size:13px;color:var(--text)}
+.ci-rule{font-size:11px;font-family:var(--mono);color:var(--gray5);margin-top:2px}
+/* table */
+.dt{width:100%;border-collapse:collapse}
+.dt th{font-size:11px;color:var(--gray5);font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:10px 14px;text-align:left;background:var(--gray0);border-bottom:1px solid var(--gray2)}
+.dt td{padding:12px 14px;border-bottom:1px solid var(--gray1);font-size:13px;vertical-align:middle}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:var(--gray0)}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.t-r{background:var(--red-light);color:var(--red)}.t-a{background:var(--amber-light);color:var(--amber)}
+.t-g{background:var(--green-light);color:var(--green)}.t-b{background:var(--blue-light);color:var(--blue)}
+.t-gr{background:var(--gray1);color:var(--gray5)}
+.dn{color:var(--red);font-weight:600}.dok{color:var(--gray6)}
+/* form */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.fg.full{grid-template-columns:1fr}
+.fgrp{display:flex;flex-direction:column;gap:5px}
+.fgrp.s2{grid-column:span 2}
+.flbl{font-size:12px;font-weight:600;color:var(--gray6);display:flex;align-items:center;gap:5px}
+.rbdg{font-size:10px;background:var(--red-light);color:var(--red);padding:1px 5px;border-radius:3px;font-weight:500}
+.mbdg{font-size:10px;background:var(--blue-light);color:var(--blue);padding:1px 5px;border-radius:3px;font-weight:500}
+.fi{padding:9px 12px;border:1px solid var(--gray3);border-radius:var(--radius);font-size:13px;font-family:var(--sans);color:var(--text);transition:border .15s,box-shadow .15s;outline:none;background:white;width:100%}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.12)}
+.fi.err{border-color:var(--red);background:#FFF5F5}
+.fhint{font-size:11px;color:var(--gray4)}
+.ferr{font-size:11px;color:var(--red);display:flex;align-items:center;gap:3px}
+.fsec{margin-bottom:28px}
+.fsec-t{font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:8px}
+/* stepper */
+.stepper{display:flex;align-items:center;margin-bottom:28px}
+.step{display:flex;align-items:center;gap:8px}
+.step-c{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.step.done .step-c{background:var(--green);color:white}
+.step.active .step-c{background:var(--blue);color:white}
+.step.pend .step-c{background:var(--gray2);color:var(--gray5)}
+.step-lbl{font-size:12px;font-weight:500}
+.step.done .step-lbl{color:var(--green)}.step.active .step-lbl{color:var(--blue)}.step.pend .step-lbl{color:var(--gray4)}
+.step-ln{flex:1;height:1px;background:var(--gray2);margin:0 8px;max-width:40px}
+.step.done+.step-ln{background:var(--green)}
+/* output */
+.og{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.oc{background:white;border:1px solid var(--gray2);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s}
+.oc:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.of{font-size:10px;font-family:var(--mono);font-weight:500;padding:2px 7px;border-radius:4px;margin-bottom:12px;display:inline-block}
+.fx{background:#E3F9E5;color:#1B5E20}.fp{background:#FFF3CD;color:#7D4F00}.fd{background:#FFE4E4;color:#8B0000}
+.on{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;letter-spacing:-.02em}
+.od{font-size:12px;color:var(--gray5);line-height:1.5}
+.ofl{margin-top:12px;display:flex;flex-wrap:wrap;gap:4px}
+.oft{font-size:10px;font-family:var(--mono);background:var(--gray1);color:var(--gray5);padding:2px 6px;border-radius:3px}
+/* modal */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:none;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.md{background:white;border-radius:12px;width:480px;max-width:95vw;box-shadow:0 20px 40px rgba(0,0,0,.15)}
+.mh{padding:20px 24px 16px;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:10px}
+.mt{font-size:16px;font-weight:700;flex:1}
+.mb{padding:20px 24px}
+.mf{padding:16px 24px;border-top:1px solid var(--gray2);display:flex;justify-content:flex-end;gap:8px}
+.mc{background:none;border:none;font-size:18px;color:var(--gray4);cursor:pointer;padding:2px 6px;border-radius:4px}
+.mc:hover{background:var(--gray1)}
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:white;padding:12px 18px;border-radius:8px;font-size:13px;z-index:200;display:flex;align-items:center;gap:8px;box-shadow:0 10px 15px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:4px solid var(--green)}
+/* progress */
+.pb{height:4px;background:var(--gray2);border-radius:2px;overflow:hidden;margin-top:12px}
+.pf{height:100%;background:var(--blue);border-radius:2px;transition:width .6s ease}
+/* timeline */
+.tl{display:flex;flex-direction:column;gap:0}
+.tli{display:flex;gap:12px;padding-bottom:16px}
+.tli:last-child{padding-bottom:0}
+.tl-l{display:flex;flex-direction:column;align-items:center;width:32px;flex-shrink:0}
+.tl-d{width:10px;height:10px;border-radius:50%;border:2px solid;flex-shrink:0;margin-top:3px}
+.tl-d.done{background:var(--green);border-color:var(--green)}.tl-d.active{background:var(--blue);border-color:var(--blue)}.tl-d.pend{background:white;border-color:var(--gray3)}
+.tl-ln{width:2px;flex:1;margin-top:4px;background:var(--gray2)}
+.tli:last-child .tl-ln{display:none}
+.tl-c{flex:1}.tl-date{font-size:11px;font-family:var(--mono);color:var(--gray4);margin-bottom:2px}
+.tl-task{font-size:13px;font-weight:500;color:var(--text)}.tl-sub{font-size:12px;color:var(--gray5);margin-top:1px}
+/* info box */
+.ib{padding:12px 14px;border-radius:6px;font-size:13px;border-left:3px solid;margin-bottom:12px}
+.ib.blue{background:var(--blue-light);border-color:var(--blue);color:#1e3a5f}
+.ib.green{background:var(--green-light);border-color:var(--green);color:#065f46}
+.ib.red{background:var(--red-light);border-color:var(--red);color:#7f1d1d}
+.ib .it{font-weight:700;margin-bottom:3px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="lm">SETSUMEIKAI SAAS</div>
+      <div class="ln">SolarExplain</div>
+    </div>
+    <div class="sb-proj">
+      <div class="pl">現在のプロジェクト</div>
+      <div class="pn">奥羽山系 太陽光発電所</div>
+      <div class="ps">秋田県横手市　4,200kW</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-sec">メインメニュー</div>
+      <div class="nav-item active" onclick="setNav(this,'dashboard')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>
+        ダッシュボード
+      </div>
+      <div class="nav-item" onclick="setNav(this,'setup')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke-width="2" stroke-linecap="round"/></svg>
+        初期設定
+        <span class="nav-badge">2</span>
+      </div>
+      <div class="nav-item" onclick="setNav(this,'compliance')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" stroke-width="2"/></svg>
+        METI準拠チェック
+      </div>
+      <div class="nav-item" onclick="setNav(this,'schedule')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-width="2" stroke-linecap="round"/></svg>
+        スケジュール管理
+      </div>
+      <div class="nav-sec">出力</div>
+      <div class="nav-item" onclick="setNav(this,'output')">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        ドキュメント出力
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="u-row">
+        <div class="u-av">田</div>
+        <div><div class="u-name">田中 誠一</div><div class="u-co">株式会社ソーラーエナジー</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title" id="tb-title">ダッシュボード</div>
+      <div class="tb-sp"></div>
+      <div class="cp-pill warn" onclick="setNav(document.querySelectorAll('.nav-item')[2],'compliance')" style="cursor:pointer">
+        <div class="cp-dot"></div>METI準拠：2件未解消
+      </div>
+      <button class="btn btn-o" style="font-size:12px;padding:6px 12px" onclick="showModal('newProj')">+ 新規プロジェクト</button>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="screen active" id="screen-dashboard">
+        <div class="ph">
+          <div class="ph-title">奥羽山系 太陽光発電所</div>
+          <div class="ph-sub">秋田県横手市　｜　4,200kW　｜　説明会：2026年5月18日（予定）</div>
+        </div>
+        <div class="sg">
+          <div class="sc hi"><div class="sc-lbl">説明会まで</div><div class="sc-val">62</div><div class="sc-sub">日（2026年5月18日）</div></div>
+          <div class="sc"><div class="sc-lbl">タスク進捗</div><div class="sc-val">7/14</div><div class="sc-sub">完了タスク</div></div>
+          <div class="sc"><div class="sc-lbl">METI準拠</div><div class="sc-val" style="color:var(--amber);font-size:22px">警告 2</div><div class="sc-sub">エラー：0件</div></div>
+          <div class="sc"><div class="sc-lbl">初期設定</div><div class="sc-val">75%</div><div class="sc-sub">入力完了率</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="ch"><div class="ct">直近のタスク</div><button class="btn btn-o" style="font-size:11px;padding:4px 10px" onclick="setNav(document.querySelectorAll('.nav-item')[3],'schedule')">すべて見る</button></div>
+            <div class="cb" style="padding:0">
+              <table class="dt">
+                <thead><tr><th>タスク</th><th>期限</th><th>状況</th></tr></thead>
+                <tbody>
+                  <tr><td>案内チラシ原稿作成</td><td class="dn">4月3日</td><td><span class="tag t-a">進行中</span></td></tr>
+                  <tr><td>会場予約確定</td><td class="dn">4月10日</td><td><span class="tag t-r">未着手</span></td></tr>
+                  <tr><td>説明会資料 初稿</td><td class="dok">4月22日</td><td><span class="tag t-b">作業中</span></td></tr>
+                  <tr><td>回覧板配布準備</td><td class="dok">5月1日</td><td><span class="tag t-gr">未着手</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ct">準拠チェック概要</div><button class="btn btn-o" style="font-size:11px;padding:4px 10px" onclick="setNav(document.querySelectorAll('.nav-item')[2],'compliance')">詳細を見る</button></div>
+            <div class="cb">
+              <div class="cl">
+                <div class="ci ok"><div class="ci-ic">✓</div><div><div class="ci-txt">通知期限（14日前以上）</div><div class="ci-rule">R-001　4月24日配布 → 24日前 ✓</div></div></div>
+                <div class="ci wrn"><div class="ci-ic">!</div><div><div class="ci-txt">パネル最高地上高が未入力です</div><div class="ci-rule">R-004　初期設定で入力してください</div></div></div>
+                <div class="ci wrn"><div class="ci-ic">!</div><div><div class="ci-txt">対象区域の説明が未入力です</div><div class="ci-rule">R-009　説明会セッション設定で入力</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="ch"><div class="ct">準備タイムライン</div></div>
+          <div class="cb">
+            <div class="tl">
+              <div class="tli"><div class="tl-l"><div class="tl-d done"></div><div class="tl-ln"></div></div><div class="tl-c"><div class="tl-date">2026年3月17日</div><div class="tl-task">初期設定 開始・発電所基礎情報登録</div><div class="tl-sub">完了</div></div></div>
+              <div class="tli"><div class="tl-l"><div class="tl-d active"></div><div class="tl-ln"></div></div><div class="tl-c"><div class="tl-date">2026年4月3日</div><div class="tl-task">案内チラシ原稿完成</div><div class="tl-sub">進行中 — 担当：田中</div></div></div>
+              <div class="tli"><div class="tl-l"><div class="tl-d pend"></div><div class="tl-ln"></div></div><div class="tl-c"><div class="tl-date">2026年4月24日 ★</div><div class="tl-task">チラシ配布（METI期限：説明会14日前以上）</div><div class="tl-sub">METI R-001 遵守期限</div></div></div>
+              <div class="tli"><div class="tl-l"><div class="tl-d pend"></div><div class="tl-ln"></div></div><div class="tl-c"><div class="tl-date">2026年5月18日</div><div class="tl-task">住民説明会 開催</div><div class="tl-sub">会場：横手市民会館（予定）</div></div></div>
+              <div class="tli"><div class="tl-l"><div class="tl-d pend"></div><div class="tl-ln"></div></div><div class="tl-c"><div class="tl-date">2026年6月17日 ★</div><div class="tl-task">経産省への開催報告</div><div class="tl-sub">METI 開催後30日以内</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETUP -->
+      <div class="screen" id="screen-setup">
+        <div class="ph"><div class="ph-title">初期設定</div><div class="ph-sub">発電所・事業者・説明会セッションの基礎情報を入力します。入力した情報は全出力物に自動反映されます。</div></div>
+        <div class="stepper">
+          <div class="step done"><div class="step-c">✓</div><div class="step-lbl">事業者情報</div></div>
+          <div class="step-ln"></div>
+          <div class="step active"><div class="step-c">2</div><div class="step-lbl">発電所情報</div></div>
+          <div class="step-ln"></div>
+          <div class="step pend"><div class="step-c">3</div><div class="step-lbl">説明会設定</div></div>
+          <div class="step-ln"></div>
+          <div class="step pend"><div class="step-c">4</div><div class="step-lbl">確認・完了</div></div>
+        </div>
+        <div class="ib blue">
+          <div class="it">ステップ 2 / 4　発電所基礎情報</div>
+          METI住民説明会ガイドラインで必須とされる項目には <span style="background:var(--blue-light);color:var(--blue);font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600">METI必須</span> が付いています。
+        </div>
+        <div class="card">
+          <div class="cb">
+            <div class="fsec">
+              <div class="fsec-t">📍 所在地</div>
+              <div class="fg">
+                <div class="fgrp"><div class="flbl">都道府県 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" type="text" value="秋田県"></div>
+                <div class="fgrp"><div class="flbl">市区町村 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" type="text" value="横手市"></div>
+                <div class="fgrp s2"><div class="flbl">番地以降</div><input class="fi" type="text" value="大雄字山根 地内"><div class="fhint">地番・大字等。チラシ・資料に記載されます。</div></div>
+              </div>
+            </div>
+            <div class="fsec">
+              <div class="fsec-t">⚡ 発電設備</div>
+              <div class="fg">
+                <div class="fgrp"><div class="flbl">発電出力（kW） <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" type="number" value="4200"></div>
+                <div class="fgrp"><div class="flbl">パネル枚数 <span class="rbdg">必須</span></div><input class="fi" type="number" value="8800"></div>
+                <div class="fgrp">
+                  <div class="flbl">パネル最高地上高（m） <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div>
+                  <input class="fi err" type="number" placeholder="例：3.2" id="ph-input" oninput="validateH(this)">
+                  <div class="ferr" id="ph-err">⚠ 未入力：METI R-004 必須項目です</div>
+                </div>
+                <div class="fgrp"><div class="flbl">土地面積（m²） <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" type="number" value="52000"></div>
+                <div class="fgrp"><div class="flbl">FIT / FIP区分 <span class="rbdg">必須</span></div><select class="fi"><option>FIT（固定価格買取制度）</option><option>FIP（フィードインプレミアム）</option></select></div>
+                <div class="fgrp"><div class="flbl">経産省認定番号 <span class="rbdg">必須</span></div><input class="fi" type="text" value="050A-00012345"></div>
+              </div>
+            </div>
+            <div class="fsec">
+              <div class="fsec-t">📅 工事・運転スケジュール</div>
+              <div class="fg">
+                <div class="fgrp"><div class="flbl">工事開始予定日 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" type="date" value="2026-09-01"></div>
+                <div class="fgrp"><div class="flbl">工事完了予定日 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" type="date" value="2027-03-31"></div>
+                <div class="fgrp"><div class="flbl">運転開始予定日 <span class="rbdg">必須</span></div><input class="fi" type="date" value="2027-04-01"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <button class="btn btn-o">← 前のステップ</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-o">下書き保存</button>
+            <button class="btn btn-p" onclick="showToast('入力内容を保存しました。ステップ3に進んでください。','success')">次へ：説明会設定 →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPLIANCE -->
+      <div class="screen" id="screen-compliance">
+        <div class="ph"><div class="ph-title">METI準拠チェック</div><div class="ph-sub">入力済みデータをMETI住民説明会ガイドライン（2023年版）に照合した結果です。</div></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+          <div class="sc" style="border-color:var(--red)"><div class="sc-lbl">ERROR（出力ブロック）</div><div class="sc-val" style="color:var(--red)">0</div><div class="sc-sub">全エラー解消済み</div></div>
+          <div class="sc" style="border-color:var(--amber)"><div class="sc-lbl">WARNING（要確認）</div><div class="sc-val" style="color:var(--amber)">2</div><div class="sc-sub">出力は可能。推奨対応あり</div></div>
+          <div class="sc" style="border-color:var(--green)"><div class="sc-lbl">OK（準拠確認済み）</div><div class="sc-val" style="color:var(--green)">5</div><div class="sc-sub">ガイドライン適合</div></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">チェック結果詳細</div><span style="font-size:11px;color:var(--gray5);font-family:var(--mono)">METI住民説明会ガイドライン 2023年版</span></div>
+          <div class="cb">
+            <div class="cl">
+              <div class="ci ok"><div class="ci-ic">✓</div><div style="flex:1"><div class="ci-txt">案内チラシの配布は説明会の14日前以上である</div><div class="ci-rule">R-001　4月24日配布 → 5月18日まで24日　✓</div></div><span class="tag t-g">OK</span></div>
+              <div class="ci ok"><div class="ci-ic">✓</div><div style="flex:1"><div class="ci-txt">チラシに発電所名称・所在地が記載される</div><div class="ci-rule">R-002　奥羽山系太陽光発電所、秋田県横手市　✓</div></div><span class="tag t-g">OK</span></div>
+              <div class="ci ok"><div class="ci-ic">✓</div><div style="flex:1"><div class="ci-txt">事業者名称・連絡先が記載される</div><div class="ci-rule">R-002　株式会社ソーラーエナジー / 018-XXX-XXXX　✓</div></div><span class="tag t-g">OK</span></div>
+              <div class="ci ok"><div class="ci-ic">✓</div><div style="flex:1"><div class="ci-txt">発電出力（kW）が説明資料に含まれる</div><div class="ci-rule">R-003　4,200kW　✓</div></div><span class="tag t-g">OK</span></div>
+              <div class="ci ok"><div class="ci-ic">✓</div><div style="flex:1"><div class="ci-txt">工事期間（開始・完了）が説明資料に含まれる</div><div class="ci-rule">R-003　2026年9月〜2027年3月　✓</div></div><span class="tag t-g">OK</span></div>
+              <div class="ci wrn"><div class="ci-ic">!</div><div style="flex:1"><div class="ci-txt">パネル最高地上高（m）が未入力です</div><div class="ci-rule">R-004　発電所情報 → 「パネル最高地上高」を入力してください</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0"><span class="tag t-a">WARNING</span><button class="btn btn-o" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="setNav(document.querySelectorAll('.nav-item')[1],'setup')">今すぐ入力</button></div></div>
+              <div class="ci wrn"><div class="ci-ic">!</div><div style="flex:1"><div class="ci-txt">説明会の対象区域説明が未入力です</div><div class="ci-rule">R-009　説明会セッション設定 → 「対象区域の説明」を入力</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0"><span class="tag t-a">WARNING</span><button class="btn btn-o" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="setNav(document.querySelectorAll('.nav-item')[1],'setup')">今すぐ入力</button></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="ib green" style="margin-top:16px"><div class="it">WARNINGが2件あります</div>現在の状態でもドキュメントの出力は可能ですが、METI推奨事項の充足のため、上記2件の入力を推奨します。</div>
+      </div>
+
+      <!-- SCHEDULE -->
+      <div class="screen" id="screen-schedule">
+        <div class="ph"><div class="ph-title">スケジュール管理</div><div class="ph-sub">説明会日程（2026年5月18日）から逆算して自動生成されたスケジュールです。</div></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px">
+          <button class="btn btn-o">フィルター</button>
+          <button class="btn btn-p" onclick="showToast('スケジュール管理表.xlsxをダウンロードしました','success')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke-width="2"/></svg>
+            Excel出力
+          </button>
+        </div>
+        <div class="card">
+          <div class="cb" style="padding:0">
+            <table class="dt">
+              <thead><tr><th>No.</th><th>カテゴリ</th><th>タスク内容</th><th>担当</th><th>期限</th><th>D-Day</th><th>状況</th></tr></thead>
+              <tbody>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">01</td><td><span class="tag t-b">通知</span></td><td>案内チラシ原稿作成</td><td>田中</td><td class="dn">4月3日</td><td style="font-family:var(--mono);font-size:12px;color:var(--red)">-17</td><td><span class="tag t-a">進行中</span></td></tr>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">02</td><td><span class="tag t-b">通知</span></td><td>会場予約確定・確認書受領</td><td>—</td><td class="dn">4月10日</td><td style="font-family:var(--mono);font-size:12px;color:var(--red)">-24</td><td><span class="tag t-r">未着手</span></td></tr>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">03</td><td><span class="tag t-g">資料</span></td><td>説明会資料（PPT）初稿作成</td><td>田中</td><td class="dok">4月22日</td><td style="font-family:var(--mono);font-size:12px;color:var(--gray5)">-36</td><td><span class="tag t-b">作業中</span></td></tr>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">04</td><td><span class="tag t-b">通知</span></td><td style="font-weight:600;color:var(--amber)">★ チラシ配布（METI期限）</td><td>田中</td><td class="dok">4月24日</td><td style="font-family:var(--mono);font-size:12px;color:var(--gray5)">-38</td><td><span class="tag t-gr">未着手</span></td></tr>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">05</td><td><span class="tag t-g">資料</span></td><td>説明会資料 レビュー・修正</td><td>鈴木</td><td class="dok">5月2日</td><td style="font-family:var(--mono);font-size:12px;color:var(--gray5)">-46</td><td><span class="tag t-gr">未着手</span></td></tr>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">06</td><td><span class="tag t-g">資料</span></td><td>Q&amp;A想定問答集 作成</td><td>—</td><td class="dok">5月8日</td><td style="font-family:var(--mono);font-size:12px;color:var(--gray5)">-52</td><td><span class="tag t-gr">未着手</span></td></tr>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">07</td><td><span class="tag t-a">開催</span></td><td style="font-weight:600">住民説明会 開催当日</td><td>全員</td><td class="dok">5月18日</td><td style="font-family:var(--mono);font-size:12px;color:var(--blue)">0</td><td><span class="tag t-gr">未着手</span></td></tr>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">08</td><td><span class="tag t-a">開催</span></td><td>議事録・参加者リスト整理</td><td>田中</td><td class="dok">5月25日</td><td style="font-family:var(--mono);font-size:12px;color:var(--gray5)">+7</td><td><span class="tag t-gr">未着手</span></td></tr>
+                <tr><td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">09</td><td><span class="tag t-r">報告</span></td><td style="font-weight:600;color:var(--amber)">★ 経産省へ開催報告（METI期限）</td><td>田中</td><td class="dok">6月17日</td><td style="font-family:var(--mono);font-size:12px;color:var(--gray5)">+30</td><td><span class="tag t-gr">未着手</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pb"><div class="pf" style="width:30%"></div></div>
+        <div style="font-size:11px;color:var(--gray4);text-align:right;margin-top:6px;font-family:var(--mono)">タスク進捗　3 / 9（33%）</div>
+      </div>
+
+      <!-- OUTPUT -->
+      <div class="screen" id="screen-output">
+        <div class="ph"><div class="ph-title">ドキュメント出力</div><div class="ph-sub">初期設定済みのデータをもとに、各フォーマットを自動生成します。</div></div>
+        <div class="ib blue" style="margin-bottom:20px"><div class="it">WARNINGが2件あります</div>出力は可能ですが、パネル最高地上高・対象区域説明が未入力のため、生成された資料に空欄が発生します。<span style="color:var(--blue);font-weight:600;cursor:pointer" onclick="setNav(document.querySelectorAll('.nav-item')[2],'compliance')">準拠チェック画面</span>から入力することを推奨します。</div>
+        <div class="og">
+          <div class="oc" onclick="showModal('dlA')"><span class="of fx">XLSX</span><div class="on">A. スケジュール管理表</div><div class="od">説明会日程から逆算した全タスクのマイルストーン管理シート。期限・担当者・ステータス列を含む。</div><div class="ofl"><span class="oft">plant_name</span><span class="oft">session_date</span><span class="oft">notice_days_before</span><span class="oft">KnowledgeRule</span></div></div>
+          <div class="oc" onclick="showModal('dlB')"><span class="of fx">XLSX</span><div class="on">B. タスク管理・役割分担表</div><div class="od">準備業務を役割別に整理した分担表。担当者名の入力欄付き。カテゴリ別に色分けされます。</div><div class="ofl"><span class="oft">company_name</span><span class="oft">rule_category</span><span class="oft">session_date</span></div></div>
+          <div class="oc" onclick="showModal('dlC')"><span class="of fp">PPTX</span><div class="on">C. 住民説明会資料</div><div class="od">METI準拠の説明会プレゼン資料。発電所概要・工事計画・連絡先・Q&Aスライドを含む7枚構成。</div><div class="ofl"><span class="oft">plant_name</span><span class="oft">capacity_kw</span><span class="oft">construction_*</span><span class="oft">contact_*</span></div></div>
+          <div class="oc" onclick="showModal('dlD')"><span class="of fd">PDF</span><div class="on">D. 住民説明会 案内チラシ</div><div class="od">METI必須記載事項を全て含む案内チラシ。A4縦1枚。回覧板・ポスト投函用。</div><div class="ofl"><span class="oft">plant_name</span><span class="oft">location_*</span><span class="oft">session_date</span><span class="oft">contact_tel</span></div></div>
+        </div>
+        <div style="margin-top:8px">
+          <div class="oc" onclick="showToast('一括出力を開始しました（ZIP形式）','success')" style="display:flex;align-items:center;gap:16px">
+            <div style="flex:1"><div class="on" style="font-size:14px">一括出力（A + B + C + D）</div><div class="od">全フォーマットをZIPファイルにまとめてダウンロード</div></div>
+            <button class="btn btn-p" style="pointer-events:none">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke-width="2"/></svg>
+              一括ダウンロード
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="modal-newProj"><div class="md">
+  <div class="mh"><div class="mt">新規プロジェクト作成</div><button class="mc" onclick="closeModal('newProj')">×</button></div>
+  <div class="mb">
+    <div class="fgrp" style="margin-bottom:16px"><div class="flbl">発電所名称 <span class="rbdg">必須</span></div><input class="fi" type="text" placeholder="例：〇〇市 太陽光発電所"></div>
+    <div class="fgrp" style="margin-bottom:16px"><div class="flbl">都道府県 <span class="rbdg">必須</span></div><input class="fi" type="text" placeholder="例：秋田県"></div>
+    <div class="fgrp"><div class="flbl">説明会予定日（任意）</div><input class="fi" type="date"><div class="fhint">後から設定することもできます</div></div>
+  </div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('newProj')">キャンセル</button><button class="btn btn-p" onclick="closeModal('newProj');showToast('新規プロジェクトを作成しました','success')">作成する</button></div>
+</div></div>
+
+<div class="mo" id="modal-dlA"><div class="md">
+  <div class="mh"><div class="mt">A. スケジュール管理表</div><button class="mc" onclick="closeModal('dlA')">×</button></div>
+  <div class="mb">
+    <div class="ib green" style="margin-bottom:16px"><div class="it">出力準備完了</div>以下のデータが自動入力された状態でExcelが出力されます。</div>
+    <table class="dt"><thead><tr><th>項目</th><th>値</th></tr></thead><tbody>
+      <tr><td>発電所名</td><td>奥羽山系 太陽光発電所</td></tr>
+      <tr><td>説明会日</td><td>2026年5月18日</td></tr>
+      <tr><td>タスク数</td><td>9件（自動展開）</td></tr>
+      <tr><td>METI期限タスク</td><td>2件（★マーク付き）</td></tr>
+    </tbody></table>
+  </div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('dlA')">キャンセル</button><button class="btn btn-p" onclick="closeModal('dlA');showToast('スケジュール管理表.xlsxをダウンロードしました','success')">ダウンロード</button></div>
+</div></div>
+
+<div class="mo" id="modal-dlB"><div class="md">
+  <div class="mh"><div class="mt">B. タスク管理・役割分担表</div><button class="mc" onclick="closeModal('dlB')">×</button></div>
+  <div class="mb"><div class="ib green"><div class="it">出力準備完了</div>役割分担表をExcelで出力します。担当者名欄は空欄で出力されます。</div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('dlB')">キャンセル</button><button class="btn btn-p" onclick="closeModal('dlB');showToast('役割分担表.xlsxをダウンロードしました','success')">ダウンロード</button></div>
+</div></div>
+
+<div class="mo" id="modal-dlC"><div class="md">
+  <div class="mh"><div class="mt">C. 住民説明会資料</div><button class="mc" onclick="closeModal('dlC')">×</button></div>
+  <div class="mb"><div class="ib blue"><div class="it">WARNINGあり</div>パネル最高地上高が未入力のため、該当スライドに空欄が発生します。このまま出力しますか？</div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('dlC')">入力してから出力</button><button class="btn btn-p" onclick="closeModal('dlC');showToast('住民説明会資料.pptxをダウンロードしました','success')">このまま出力</button></div>
+</div></div>
+
+<div class="mo" id="modal-dlD"><div class="md">
+  <div class="mh"><div class="mt">D. 住民説明会 案内チラシ</div><button class="mc" onclick="closeModal('dlD')">×</button></div>
+  <div class="mb"><div class="ib green"><div class="it">METI必須項目：すべて入力済み</div>案内チラシに必要なMETI必須記載事項は全て入力済みです。</div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('dlD')">キャンセル</button><button class="btn btn-p" onclick="closeModal('dlD');showToast('案内チラシ.pdfをダウンロードしました','success')">ダウンロード</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TITLES={dashboard:'ダッシュボード',setup:'初期設定',compliance:'METI準拠チェック',schedule:'スケジュール管理',output:'ドキュメント出力'};
+function setNav(el,screen){
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const sc=document.getElementById('screen-'+screen);
+  if(sc)sc.classList.add('active');
+  document.getElementById('tb-title').textContent=TITLES[screen]||'';
+}
+function showModal(id){document.getElementById('modal-'+id).classList.add('open')}
+function closeModal(id){document.getElementById('modal-'+id).classList.remove('open')}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+let tt;
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=(type==='success'?'✓  ':'✕  ')+msg;
+  t.className='toast '+type+' show';
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3500);
+}
+function validateH(el){
+  const err=document.getElementById('ph-err');
+  if(el.value&&parseFloat(el.value)>0){
+    el.classList.remove('err');err.style.display='none';
+    showToast('パネル最高地上高を入力しました。準拠チェックを更新します。','success');
+  }else{el.classList.add('err');err.style.display='flex'}
+}
+</script>
+</body>
+</html>
