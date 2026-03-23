@@ -516,8 +516,8 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
           <div class="card" style="cursor:pointer" onclick="exportSheet()">
             <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#E3F9E5;color:#1B5E20;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">XLSX</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">B. タスク管理・役割分担表</div><div style="font-size:12px;color:var(--gray5)">準備業務を役割別に整理した分担表</div></div>
           </div>
-          <div class="card" style="cursor:pointer" onclick="showToast('PowerPoint出力はフェーズ2で実装予定です','error')">
-            <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#FFF3CD;color:#7D4F00;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">PPTX</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">C. 住民説明会資料</div><div style="font-size:12px;color:var(--gray5)">METI準拠の説明会プレゼン資料（フェーズ2実装予定）</div></div>
+          <div class="card" style="cursor:pointer" onclick="exportSlides()">
+            <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#E6F1FB;color:#0C447C;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">Google Slides</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">C. 住民説明会資料（74頁）</div><div style="font-size:12px;color:var(--gray5)">METIガイドライン準拠の説明会プレゼン資料。テンプレートにDBデータを自動差し込み。Google Slides上で画像追加・編集可能。</div></div>
           </div>
           <div class="card" style="cursor:pointer" onclick="exportFlyer()">
             <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#FFE4E4;color:#8B0000;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">PDF</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">D. 住民説明会 案内チラシ</div><div style="font-size:12px;color:var(--gray5)">METI必須記載事項を全て含む案内チラシ（Google Docs形式）</div></div>
@@ -1552,6 +1552,18 @@ function exportFlyer() {
     .then(function(result) {
       window.open(result.url, '_blank');
       showToast('案内チラシを開きました', 'success');
+    })
+    .catch(function(err) {
+      showToast('生成に失敗しました: ' + (err.message || ''), 'error');
+    });
+}
+
+function exportSlides() {
+  showToast('住民説明会資料を生成中...（テンプレートコピー＋データ差し込み）', 'success');
+  callGAS('generateSlides')
+    .then(function(result) {
+      window.open(result.url, '_blank');
+      showToast('住民説明会資料をGoogle Slidesで開きました。画像追加・編集が可能です。', 'success');
     })
     .catch(function(err) {
       showToast('生成に失敗しました: ' + (err.message || ''), 'error');
