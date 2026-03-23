@@ -132,6 +132,13 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
 .chk-body{display:flex;flex-direction:column;gap:2px}
 .chk-title{font-size:13px;font-weight:600;color:var(--text)}
 .chk-ref{font-size:11px;color:var(--gray4);line-height:1.4}
+/* ── スライドデータ入力タブ ──────────────── */
+.sd-tab{font-size:11px !important;padding:4px 10px !important}
+.sd-tab.active{background:var(--blue) !important;color:white !important;border-color:var(--blue) !important}
+.sd-field{margin-bottom:12px}
+.sd-field .flbl{font-size:12px;margin-bottom:3px}
+.sd-field .sd-gl{font-size:10px;color:var(--gray4);margin-bottom:4px;line-height:1.4;padding:4px 8px;background:var(--blue-light);border-radius:4px;border-left:3px solid var(--blue)}
+.sd-field .sd-slide{font-size:10px;color:var(--gray5);font-family:var(--mono)}
 .ci-txt{font-size:13px;color:var(--text)}.ci-rule{font-size:11px;font-family:var(--mono);color:var(--gray5);margin-top:2px}
 /* ── インフォボックス ────────────────────────── */
 .ib{padding:12px 14px;border-radius:6px;font-size:13px;border-left:3px solid;margin-bottom:12px}
@@ -215,6 +222,7 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
       <div class="nav-item" onclick="setNav(this,'setup1')">初期設定<span class="nav-badge" id="setup-badge">!</span></div>
       <div class="nav-item" onclick="setNav(this,'compliance')">METI準拠チェック</div>
       <div class="nav-item" onclick="setNav(this,'schedule')">スケジュール管理</div>
+      <div class="nav-item" onclick="setNav(this,'slidedata')">説明会資料入力<span class="nav-badge" id="slidedata-badge" style="background:var(--blue)">NEW</span></div>
       <div class="nav-sec">出力</div>
       <div class="nav-item" onclick="setNav(this,'output')">ドキュメント出力</div>
     </nav>
@@ -505,6 +513,28 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
         <div style="font-size:11px;color:var(--gray4);text-align:right;margin-top:6px;font-family:var(--mono)" id="task-pb-label">--</div>
       </div>
 
+      <!-- ══ SLIDE DATA INPUT ════════════════════════════════ -->
+      <div class="screen" id="screen-slidedata">
+        <div class="ph"><div class="ph-title">説明会資料入力</div><div class="ph-sub">住民説明会資料（74頁）の全項目を入力します。入力済みデータはスライド生成時に自動差し込みされます。</div></div>
+        <div class="pb" style="margin-bottom:12px"><div class="pf" id="sd-progress" style="width:0%"></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:12px;color:var(--gray5)" id="sd-progress-label">入力率: --</div>
+          <button class="btn btn-p" style="font-size:12px;padding:6px 16px" onclick="saveAllSlideData()">全クラスター保存</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px" id="sd-tabs">
+          <button class="btn btn-o sd-tab active" onclick="switchSlideTab('A',this)">A.事業者</button>
+          <button class="btn btn-o sd-tab" onclick="switchSlideTab('B',this)">B.設備仕様</button>
+          <button class="btn btn-o sd-tab" onclick="switchSlideTab('C',this)">C.法令・権利</button>
+          <button class="btn btn-o sd-tab" onclick="switchSlideTab('D',this)">D.工事</button>
+          <button class="btn btn-o sd-tab" onclick="switchSlideTab('E',this)">E.斜面・盛土</button>
+          <button class="btn btn-o sd-tab" onclick="switchSlideTab('F',this)">F.地盤・排水</button>
+          <button class="btn btn-o sd-tab" onclick="switchSlideTab('G',this)">G.法面・防災</button>
+          <button class="btn btn-o sd-tab" onclick="switchSlideTab('H',this)">H.環境・廃棄</button>
+          <button class="btn btn-o sd-tab" onclick="switchSlideTab('I',this)">I.運営</button>
+        </div>
+        <div id="sd-panel"></div>
+      </div>
+
       <!-- ══ OUTPUT ═════════════════════════════════════ -->
       <div class="screen" id="screen-output">
         <div class="ph"><div class="ph-title">ドキュメント出力</div><div class="ph-sub">初期設定済みのデータをもとに各フォーマットを自動生成します。</div></div>
@@ -562,6 +592,7 @@ var TITLES = {
   setup4: '初期設定',
   compliance: 'METI準拠チェック',
   schedule: 'スケジュール管理',
+  slidedata: '説明会資料入力',
   output: 'ドキュメント出力'
 };
 
@@ -1014,6 +1045,7 @@ function setNav(el, screen) {
   closeSidebar();
   if (screen === 'schedule') loadSchedule();
   if (screen === 'compliance') runMetiCheck();
+  if (screen === 'slidedata') loadSlideDataFromServer();
 }
 
 function goScreen(id) {
@@ -1568,6 +1600,211 @@ function exportSlides() {
     .catch(function(err) {
       showToast('生成に失敗しました: ' + (err.message || ''), 'error');
     });
+}
+
+// ══════════════════════════════════════════════════════════════
+// 説明会資料入力 — クラスター定義 & 描画
+// ══════════════════════════════════════════════════════════════
+var SLIDE_CLUSTERS = {
+  A: { label: 'A. 事業者・関係者情報', slides: '1,3,13-15,71,74', fields: [
+    { key: 'a_officer_list', label: '役員一覧', type: 'textarea', slide: 'S13', gl: 'GL P.15：代表者及び役員の氏名・概要' },
+    { key: 'a_investors', label: '主な出資者', type: 'textarea', slide: 'S14', gl: 'GL P.15：事業者が法人の場合は、その主な出資者' },
+    { key: 'a_maint_dept', label: '保守点検責任部署', type: 'text', slide: 'S15', gl: 'GL P.15：予定している保守点検責任者' },
+    { key: 'a_maint_person', label: '保守点検実務担当者', type: 'text', slide: 'S15', gl: '' }
+  ]},
+  B: { label: 'B. 設備仕様', slides: '4-8,42-43', fields: [
+    { key: 'b_install_type', label: '設置形態', type: 'text', slide: 'S5', gl: 'GL P.14：設置形態', placeholder: '例：地上設置型' },
+    { key: 'b_land_use', label: '用地説明', type: 'text', slide: 'S5', gl: '', placeholder: '例：パネル用地（伐採有・伐根無）' },
+    { key: 'b_capacity_dc', label: 'パネル合計出力 DC (kW)', type: 'text', slide: 'S6', gl: 'GL P.14：出力' },
+    { key: 'b_pcs_resilience', label: '災害時活用可能性（自立運転・給電コンセント）', type: 'textarea', slide: 'S8', gl: 'GL P.14：パワーコンディショナーの自立運転機能の有無' },
+    { key: 'b_foundation_type', label: '基礎形式', type: 'text', slide: 'S42', gl: '申合せ P.5：基礎設計', placeholder: '例：スクリュー杭 Φ76-T3' },
+    { key: 'b_design_std', label: '設計基準', type: 'text', slide: 'S42', gl: '', placeholder: '例：JIS C 8955:2017' },
+    { key: 'b_snow_load', label: '積雪荷重', type: 'text', slide: 'S42', gl: '', placeholder: '例：90cm対応（多雪地域基準）' },
+    { key: 'b_frost_depth', label: '凍結深度', type: 'text', slide: 'S42', gl: '', placeholder: '例：25cmを考慮した根入れ設計' },
+    { key: 'b_array_spacing', label: 'アレイ間離隔', type: 'text', slide: 'S43', gl: '申合せ P.5：保守点検スペース確保', placeholder: '例：保守車両通行可能な離隔距離' }
+  ]},
+  C: { label: 'C. 法令・権利関係', slides: '9-11,44', fields: [
+    { key: 'c_forest_permit', label: '林地開発許可', type: 'text', slide: 'S9', gl: 'GL P.14-15：関係法令遵守状況', placeholder: '取得済 / 申請中 / 不要' },
+    { key: 'c_farmland', label: '農地転用', type: 'text', slide: 'S9', gl: '', placeholder: '取得済 / 不要' },
+    { key: 'c_local_ordinance', label: '地方条例・要綱', type: 'text', slide: 'S9', gl: '', placeholder: '例：白河市要綱 届出済' },
+    { key: 'c_other_permits', label: 'その他許認可', type: 'textarea', slide: 'S9', gl: '' },
+    { key: 'c_land_status', label: '土地権原取得状況', type: 'text', slide: 'S10', gl: 'GL P.15：所有権その他の使用の権原の取得有無', placeholder: '取得済み / 一部未取得' },
+    { key: 'c_land_basis', label: '土地権原根拠', type: 'text', slide: 'S10', gl: '', placeholder: '例：系統連系工事着工申込書' },
+    { key: 'c_land_pending', label: '未取得の場合の状況', type: 'textarea', slide: 'S11', gl: 'GL P.15：取得できていない場合は、その取得状況' },
+    { key: 'c_unity_confirm', label: '開発行為の一体性', type: 'text', slide: 'S44', gl: '申合せ P.5：事業の一体性確認' }
+  ]},
+  D: { label: 'D. 工事スケジュール', slides: '12', fields: [
+    { key: 'd_grid_connect_date', label: '系統連系予定日', type: 'text', slide: 'S12', gl: 'GL P.15：運転開始予定の時期', placeholder: '例：2023年12月25日' },
+    { key: 'd_construction_note', label: '工期備考', type: 'text', slide: 'S12', gl: '', placeholder: '例：負担金入金後25ヶ月を目途' }
+  ]},
+  E: { label: 'E. 安全：斜面・盛土', slides: '16-24', fields: [
+    { key: 'e_slope_design', label: '①斜面勾配の設計方針', type: 'textarea', slide: 'S16', gl: '申合せ P.2：勾配は原則30度未満' },
+    { key: 'e_steep_measures', label: '①30度以上箇所の対策', type: 'textarea', slide: 'S17', gl: '申合せ P.2：擁壁・排水施設・法面保護工の設置' },
+    { key: 'e_cutfill_method', label: '②盛土・切土の手法', type: 'textarea', slide: 'S18', gl: '申合せ P.2：土砂移動量は必要最小限度' },
+    { key: 'e_fill_height', label: '②盛土高の確認', type: 'text', slide: 'S19', gl: '申合せ P.3：原則15m以下' },
+    { key: 'e_bench_terrace', label: '②小段設置計画（盛土5m超）', type: 'text', slide: 'S20', gl: '申合せ P.3：5m程度ごとに小段' },
+    { key: 'e_cut_height', label: '②切土高対策（10m超）', type: 'text', slide: 'S21', gl: '申合せ P.3：5〜10mごとに小段' },
+    { key: 'e_slope_angle', label: '②法面勾配の設計値', type: 'text', slide: 'S22', gl: '申合せ P.3：原則30度以下', placeholder: '例：30度以下（1:1.5以上）' },
+    { key: 'e_compaction', label: '②締固め管理', type: 'text', slide: 'S23', gl: '申合せ P.3：仕上がり厚さ30cm以下' },
+    { key: 'e_seasonal_plan', label: '②季節配慮（工事時期）', type: 'text', slide: 'S24', gl: '申合せ P.3：融雪・豪雨の配慮' }
+  ]},
+  F: { label: 'F. 安全：地盤・排水', slides: '25-34', fields: [
+    { key: 'f_soil_survey', label: '③地盤調査結果', type: 'textarea', slide: 'S25', gl: '申合せ P.3：地盤強度の評価を行う' },
+    { key: 'f_ground_improve', label: '③地盤改良措置', type: 'text', slide: 'S26', gl: '申合せ P.3：段切り・土の入れ替え等' },
+    { key: 'f_pile_plan', label: '③杭打ち計画', type: 'text', slide: 'S27', gl: '申合せ P.3：滑りやすい土質への対処' },
+    { key: 'f_soft_ground', label: '③軟弱地盤対策', type: 'text', slide: 'S28', gl: '申合せ P.3：セメント系固化材等の地盤改良' },
+    { key: 'f_retention_basin', label: '④調整池計画', type: 'textarea', slide: 'S29', gl: '申合せ P.3：水理計算に基づく排水施設・調整池' },
+    { key: 'f_runoff_coeff', label: '④流出係数', type: 'text', slide: 'S30', gl: '申合せ P.3：0.9〜1.0', placeholder: '例：0.9〜1.0' },
+    { key: 'f_rainfall_std', label: '④設計雨量強度基準', type: 'text', slide: 'S31', gl: '申合せ P.3：地域の特性等を考慮' },
+    { key: 'f_river_consult', label: '④河川管理者協議', type: 'text', slide: 'S32', gl: '申合せ P.4：河川管理者等と協議' },
+    { key: 'f_groundwater', label: '④地下水排除工', type: 'text', slide: 'S33', gl: '申合せ P.4：地下水排除工や水平排水層' },
+    { key: 'f_downstream', label: '④下流流下能力対策', type: 'text', slide: 'S34', gl: '申合せ P.4：調整池等の設置' }
+  ]},
+  G: { label: 'G. 安全：法面・防災', slides: '35-41', fields: [
+    { key: 'g_revegetation', label: '⑤法面緑化', type: 'text', slide: 'S35', gl: '申合せ P.4：表面緑化による安定化' },
+    { key: 'g_surface_protect', label: '⑤法面保護（伏工）', type: 'text', slide: 'S36', gl: '申合せ P.4：植生マット等' },
+    { key: 'g_sediment_basin', label: '⑤沈砂池', type: 'text', slide: 'S37', gl: '申合せ P.4：えん堤・沈砂池の先行設置' },
+    { key: 'g_drip_erosion', label: '⑤雨垂れ対策', type: 'text', slide: 'S38', gl: '申合せ P.4：雨どい・U字溝の設置' },
+    { key: 'g_facility_sequence', label: '⑥防災施設の先行設置順序', type: 'textarea', slide: 'S39-40', gl: '申合せ P.4：防災施設を先行設置' },
+    { key: 'g_contractor_capability', label: '⑦施工事業者の能力', type: 'textarea', slide: 'S41', gl: '申合せ P.5：施工能力の確認' }
+  ]},
+  H: { label: 'H. 環境・景観・廃棄', slides: '45-70', fields: [
+    { key: 'h_emergency_contact', label: '⑩緊急連絡体制', type: 'textarea', slide: 'S45', gl: 'GL P.15：連絡体制の確立' },
+    { key: 'h_completion_verify', label: '⑪完了確認プロセス', type: 'text', slide: 'S46', gl: '申合せ P.6：完了確認' },
+    { key: 'h_maint_plan', label: '⑫維持管理計画', type: 'textarea', slide: 'S47-48', gl: '申合せ P.6：維持管理計画の策定' },
+    { key: 'h_decommission', label: '⑭撤去・事後措置', type: 'textarea', slide: 'S49-50', gl: '申合せ P.6：速やかに撤去及び処分' },
+    { key: 'h_landscape', label: '景観面の予防措置', type: 'textarea', slide: 'S51', gl: 'GL P.16：景観面への影響及び予防措置' },
+    { key: 'h_noise', label: '騒音・振動対策', type: 'text', slide: 'S52', gl: 'GL P.16：(i) 騒音・振動' },
+    { key: 'h_water_quality', label: '水の汚れ/濁り対策', type: 'text', slide: 'S53', gl: 'GL P.16：(ii) 水の汚れ/濁り' },
+    { key: 'h_glare', label: '反射光対策', type: 'text', slide: 'S54', gl: 'GL P.16：(iii) 反射光' },
+    { key: 'h_weed', label: '雑草管理', type: 'text', slide: 'S55', gl: 'GL P.16：(iv) 雑草の繁茂' },
+    { key: 'h_biodiversity', label: '生物多様性配慮', type: 'text', slide: 'S62', gl: 'GL P.16-17：(xi) 生物の多様性' },
+    { key: 'h_decom_cost_total', label: '廃棄費用総額', type: 'text', slide: 'S63', gl: 'GL P.21：廃棄費用の総額' },
+    { key: 'h_decom_cost_method', label: '廃棄費用算定方法', type: 'text', slide: 'S64', gl: 'GL P.21：廃棄費用の算定方法' },
+    { key: 'h_decom_period', label: '積立開始・終了時期', type: 'text', slide: 'S65', gl: 'GL P.21' },
+    { key: 'h_decom_unit_price', label: '積立単価（円/kWh）', type: 'text', slide: 'S66', gl: 'GL P.21：毎月の積立単価', placeholder: '例：1.40' },
+    { key: 'h_panel_hazardous', label: 'パネル有害物質情報', type: 'textarea', slide: 'S67', gl: 'GL P.21：鉛・カドミウム・ヒ素・セレンの含有情報' },
+    { key: 'h_waste_plan', label: '産業廃棄物管理計画', type: 'textarea', slide: 'S68-69', gl: 'GL P.21：産業廃棄物の種類・排出見込量' },
+    { key: 'h_land_restoration', label: '原状回復義務', type: 'text', slide: 'S70', gl: 'GL P.21：原状回復義務の内容' }
+  ]},
+  I: { label: 'I. 説明会運営', slides: '72-73', fields: [
+    { key: 'i_recording_detail', label: '録音・録画の詳細', type: 'text', slide: 'S72', gl: 'GL P.24：説明会の録音・録画' },
+    { key: 'i_qa_note', label: '質疑応答に関する備考', type: 'textarea', slide: 'S73', gl: '' }
+  ]}
+};
+
+var slideDataCache = {};
+
+function switchSlideTab(cluster, btn) {
+  var tabs = document.querySelectorAll('.sd-tab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  btn.classList.add('active');
+  renderSlidePanel(cluster);
+}
+
+function renderSlidePanel(cluster) {
+  var c = SLIDE_CLUSTERS[cluster];
+  if (!c) return;
+  var html = '<div class="card"><div class="cb">';
+  html += '<div style="font-size:14px;font-weight:600;margin-bottom:4px">' + esc(c.label) + '</div>';
+  html += '<div style="font-size:11px;color:var(--gray4);margin-bottom:16px">対象スライド: ' + esc(c.slides) + '</div>';
+  for (var i = 0; i < c.fields.length; i++) {
+    var f = c.fields[i];
+    var val = slideDataCache[f.key] || '';
+    html += '<div class="sd-field">';
+    html += '<div class="flbl">' + esc(f.label) + ' <span class="sd-slide">' + esc(f.slide) + '</span></div>';
+    if (f.gl) html += '<div class="sd-gl">' + esc(f.gl) + '</div>';
+    if (f.type === 'textarea') {
+      html += '<textarea class="fi sd-input" id="sd_' + f.key + '" rows="3" placeholder="' + esc(f.placeholder || '') + '">' + esc(val) + '</textarea>';
+    } else {
+      html += '<input class="fi sd-input" id="sd_' + f.key + '" type="text" value="' + esc(val) + '" placeholder="' + esc(f.placeholder || '') + '">';
+    }
+    html += '</div>';
+  }
+  html += '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">';
+  html += '<button class="btn btn-p" onclick="saveClusterData(\'' + cluster + '\')">このクラスターを保存</button>';
+  html += '</div>';
+  html += '</div></div>';
+  document.getElementById('sd-panel').innerHTML = html;
+}
+
+function saveClusterData(cluster) {
+  var c = SLIDE_CLUSTERS[cluster];
+  if (!c || !state.currentPlantId) {
+    showToast('プロジェクトが選択されていません', 'error');
+    return;
+  }
+  var fields = {};
+  for (var i = 0; i < c.fields.length; i++) {
+    var f = c.fields[i];
+    var el = document.getElementById('sd_' + f.key);
+    var val = el ? el.value : '';
+    fields[f.key] = val;
+    slideDataCache[f.key] = val;
+  }
+  showToast(c.label + ' を保存中...', 'success');
+  callGAS('saveSlideData', { plant_id: state.currentPlantId, fields: fields })
+    .then(function() {
+      showToast(c.label + ' を保存しました', 'success');
+      updateSlideProgress();
+    })
+    .catch(function(err) { showToast('保存に失敗: ' + (err.message || ''), 'error'); });
+}
+
+function saveAllSlideData() {
+  if (!state.currentPlantId) {
+    showToast('プロジェクトが選択されていません', 'error');
+    return;
+  }
+  var allFields = {};
+  for (var cluster in SLIDE_CLUSTERS) {
+    var c = SLIDE_CLUSTERS[cluster];
+    for (var i = 0; i < c.fields.length; i++) {
+      var f = c.fields[i];
+      var el = document.getElementById('sd_' + f.key);
+      if (el) {
+        allFields[f.key] = el.value;
+        slideDataCache[f.key] = el.value;
+      } else {
+        allFields[f.key] = slideDataCache[f.key] || '';
+      }
+    }
+  }
+  showToast('全クラスターを保存中...', 'success');
+  callGAS('saveSlideData', { plant_id: state.currentPlantId, fields: allFields })
+    .then(function() {
+      showToast('全クラスターを保存しました', 'success');
+      updateSlideProgress();
+    })
+    .catch(function(err) { showToast('保存に失敗: ' + (err.message || ''), 'error'); });
+}
+
+function loadSlideDataFromServer() {
+  if (!state.currentPlantId) return;
+  callGAS('loadSlideData', { plantId: state.currentPlantId })
+    .then(function(result) {
+      slideDataCache = result.fields || {};
+      updateSlideProgress();
+      renderSlidePanel('A');
+    })
+    .catch(function() {});
+}
+
+function updateSlideProgress() {
+  var total = 0;
+  var filled = 0;
+  for (var cluster in SLIDE_CLUSTERS) {
+    var c = SLIDE_CLUSTERS[cluster];
+    for (var i = 0; i < c.fields.length; i++) {
+      total++;
+      if (slideDataCache[c.fields[i].key]) filled++;
+    }
+  }
+  var pct = total > 0 ? Math.round(filled / total * 100) : 0;
+  var bar = document.getElementById('sd-progress');
+  var label = document.getElementById('sd-progress-label');
+  if (bar) bar.style.width = pct + '%';
+  if (label) label.textContent = '入力率: ' + filled + '/' + total + ' (' + pct + '%)';
 }
 
 // ══════════════════════════════════════════════════════════════
