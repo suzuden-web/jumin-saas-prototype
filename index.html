@@ -81,6 +81,8 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
 .dt td{padding:12px 14px;border-bottom:1px solid var(--gray1);font-size:13px;vertical-align:middle}
 .dt tr:last-child td{border-bottom:none}
 .dt tr:hover td{background:var(--gray0)}
+.dt tr.row-done td{background:#FFF0F3;color:var(--gray5)}
+.dt tr.row-done td .tag{opacity:.7}
 /* ── タグ ────────────────────────────────────── */
 .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
 .t-r{background:var(--red-light);color:var(--red)}.t-a{background:var(--amber-light);color:var(--amber)}
@@ -771,7 +773,8 @@ function renderTaskList(tasks) {
   for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
     var sc = t.status === '完了' ? 't-g' : t.status === '進行中' ? 't-a' : 't-gr';
-    html += '<tr><td>' + esc(t.task_name || '--') + '</td><td>' + esc(safeDate(t.deadline) || '--') + '</td><td><span class="tag ' + sc + '">' + esc(t.status || '--') + '</span></td></tr>';
+    var dashRowClass = t.status === '完了' ? ' class="row-done"' : '';
+    html += '<tr' + dashRowClass + '><td>' + esc(t.task_name || '--') + '</td><td>' + esc(safeDate(t.deadline) || '--') + '</td><td><span class="tag ' + sc + '">' + esc(t.status || '--') + '</span></td></tr>';
   }
   html += '</tbody></table>';
   el.innerHTML = html;
@@ -1298,7 +1301,8 @@ function renderScheduleTable(tasks) {
     var taskName = esc(t.task_name || '--');
     var cat = esc(t.task_category || '--');
     var sts = t.status || '--';
-    html += '<tr>';
+    var rowClass = sts === '完了' ? ' class="row-done"' : '';
+    html += '<tr' + rowClass + '>';
     html += '<td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">' + noStr + '</td>';
     html += '<td><span class="tag ' + cc + '">' + cat + '</span></td>';
     html += '<td>' + taskName + metiMark + '</td>';
@@ -1346,6 +1350,7 @@ function updateStatus(taskId, value) {
     .then(function() {
       showToast('ステータスを更新しました', 'success');
       loadSchedule();
+      loadDashboard();
     })
     .catch(function() { showToast('更新に失敗しました', 'error'); });
 }
