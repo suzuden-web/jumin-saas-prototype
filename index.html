@@ -119,8 +119,9 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
 .ci.err{background:var(--red-light);border-color:#FCA5A5}
 .ci.wrn{background:var(--amber-light);border-color:#FCD34D}
 .ci.ok{background:var(--green-light);border-color:#6EE7B7}
+.ci.info{background:var(--blue-light);border-color:#93C5FD}
 .ci-ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px}
-.ci.err .ci-ic{background:var(--red);color:white}.ci.wrn .ci-ic{background:var(--amber);color:white}.ci.ok .ci-ic{background:var(--green);color:white}
+.ci.err .ci-ic{background:var(--red);color:white}.ci.wrn .ci-ic{background:var(--amber);color:white}.ci.ok .ci-ic{background:var(--green);color:white}.ci.info .ci-ic{background:var(--blue);color:white}
 .ci-txt{font-size:13px;color:var(--text)}.ci-rule{font-size:11px;font-family:var(--mono);color:var(--gray5);margin-top:2px}
 /* ── インフォボックス ────────────────────────── */
 .ib{padding:12px 14px;border-radius:6px;font-size:13px;border-left:3px solid;margin-bottom:12px}
@@ -797,27 +798,45 @@ function runMetiCheck() {
 }
 
 function renderMetiResults(results) {
-  var errors = 0, warns = 0, oks = 0;
-  var html = '';
+  var errors = 0, warns = 0, oks = 0, infos = 0;
+  var htmlMeti = '';
+  var htmlSys = '';
   for (var i = 0; i < results.length; i++) {
     var r = results[i];
     if (r.severity === 'ERROR') errors++;
     else if (r.severity === 'WARNING') warns++;
+    else if (r.severity === 'INFO') infos++;
     else oks++;
-    var cls = r.severity === 'ERROR' ? 'err' : r.severity === 'WARNING' ? 'wrn' : 'ok';
-    var ic = r.severity === 'ERROR' ? '&#10007;' : r.severity === 'WARNING' ? '!' : '&#10003;';
-    var tag = r.severity === 'ERROR' ? 't-r' : r.severity === 'WARNING' ? 't-a' : 't-g';
-    html += '<div class="ci ' + cls + '"><div class="ci-ic">' + ic + '</div><div style="flex:1"><div class="ci-txt">' + esc(r.message) + '</div><div class="ci-rule">' + esc(r.rule_id) + '</div></div><span class="tag ' + tag + '">' + esc(r.severity) + '</span></div>';
+    var cls = r.severity === 'ERROR' ? 'err' : r.severity === 'WARNING' ? 'wrn' : r.severity === 'INFO' ? 'info' : 'ok';
+    var ic = r.severity === 'ERROR' ? '&#10007;' : r.severity === 'WARNING' ? '!' : r.severity === 'INFO' ? 'i' : '&#10003;';
+    var tag = r.severity === 'ERROR' ? 't-r' : r.severity === 'WARNING' ? 't-a' : r.severity === 'INFO' ? 't-b' : 't-g';
+    var ref = r.reference ? '<div style="font-size:10px;color:var(--gray4);margin-top:2px">根拠：' + esc(r.reference) + '</div>' : '';
+    var row = '<div class="ci ' + cls + '"><div class="ci-ic">' + ic + '</div><div style="flex:1"><div class="ci-txt">' + esc(r.message) + '</div><div class="ci-rule">' + esc(r.rule_id) + '</div>' + ref + '</div><span class="tag ' + tag + '">' + esc(r.severity) + '</span></div>';
+    if (r.category === 'SYS') {
+      htmlSys += row;
+    } else {
+      htmlMeti += row;
+    }
+  }
+
+  var fullHtml = '';
+  if (htmlMeti) {
+    fullHtml += '<div style="font-size:12px;font-weight:600;color:var(--gray5);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--gray2)">METIガイドライン準拠チェック（GL 2024年2月策定・2025年4月改訂）</div>';
+    fullHtml += htmlMeti;
+  }
+  if (htmlSys) {
+    fullHtml += '<div style="font-size:12px;font-weight:600;color:var(--gray5);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--gray2)">システムバリデーション</div>';
+    fullHtml += htmlSys;
   }
 
   var cl = document.getElementById('compliance-list');
-  if (cl) cl.innerHTML = html;
+  if (cl) cl.innerHTML = fullHtml;
   var ce = document.getElementById('c-error');
   var cw = document.getElementById('c-warn');
   var co = document.getElementById('c-ok');
   if (ce) ce.textContent = errors;
   if (cw) cw.textContent = warns;
-  if (co) co.textContent = oks;
+  if (co) co.textContent = (oks + infos);
 
   var pill = document.getElementById('meti-pill');
   var statusEl = document.getElementById('meti-status');
@@ -834,12 +853,12 @@ function renderMetiResults(results) {
   } else {
     pill.className = 'cp-pill ok';
     if (statusEl) statusEl.textContent = 'METI準拠：適合';
-    if (score) { score.textContent = '全' + oks + '件 適合'; score.style.color = 'var(--green)'; }
+    if (score) { score.textContent = '適合'; score.style.color = 'var(--green)'; }
   }
-  if (detail) detail.textContent = 'ERROR:' + errors + ' WARNING:' + warns + ' OK:' + oks;
+  if (detail) detail.textContent = 'ERROR:' + errors + ' WARNING:' + warns + ' INFO:' + infos + ' OK:' + oks;
 
   var cm = document.getElementById('confirm-meti');
-  if (cm) cm.innerHTML = html;
+  if (cm) cm.innerHTML = fullHtml;
 }
 
 // ══════════════════════════════════════════════════════════════
