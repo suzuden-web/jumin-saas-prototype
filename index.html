@@ -122,6 +122,16 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
 .ci.info{background:var(--blue-light);border-color:#93C5FD}
 .ci-ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:1px}
 .ci.err .ci-ic{background:var(--red);color:white}.ci.wrn .ci-ic{background:var(--amber);color:white}.ci.ok .ci-ic{background:var(--green);color:white}.ci.info .ci-ic{background:var(--blue);color:white}
+/* ── チェックボックス（METIチェックリスト）──── */
+.chk-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--gray2);border-radius:var(--radius);cursor:pointer;transition:all .15s;background:var(--white)}
+.chk-row:hover{border-color:var(--blue);background:var(--blue-light)}
+.chk-input{position:absolute;opacity:0;pointer-events:none}
+.chk-box{width:20px;height:20px;border:2px solid var(--gray3);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--white)}
+.chk-input:checked ~ .chk-box{background:var(--green);border-color:var(--green)}
+.chk-input:checked ~ .chk-box::after{content:'';display:block;width:6px;height:10px;border:solid white;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-2px}
+.chk-body{display:flex;flex-direction:column;gap:2px}
+.chk-title{font-size:13px;font-weight:600;color:var(--text)}
+.chk-ref{font-size:11px;color:var(--gray4);line-height:1.4}
 .ci-txt{font-size:13px;color:var(--text)}.ci-rule{font-size:11px;font-family:var(--mono);color:var(--gray5);margin-top:2px}
 /* ── インフォボックス ────────────────────────── */
 .ib{padding:12px 14px;border-radius:6px;font-size:13px;border-left:3px solid;margin-bottom:12px}
@@ -377,6 +387,14 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
               <div class="fgrp s2"><div class="flbl">対象区域の説明 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><textarea class="fi" id="target_area_description" rows="3" placeholder="例：発電所敷地から半径500m以内の横手市大雄地区の住民の方々"></textarea></div>
               <div class="fgrp"><div class="flbl">説明会担当者名 <span class="rbdg">必須</span></div><input class="fi" id="person_in_charge" type="text" placeholder="例：田中 誠一"></div>
               <div class="fgrp"><div class="flbl">役割分担</div><input class="fi" id="role_assignment" type="text" placeholder="例：司会：田中、資料説明：鈴木"></div>
+            </div>
+          </div>
+          <div class="fsec"><div class="fsec-t">METIガイドライン準備チェックリスト <span class="mbdg">METI必須</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <label class="chk-row"><input type="checkbox" id="municipal_consultation" class="chk-input"><span class="chk-box"></span><span class="chk-body"><span class="chk-title">市町村への事前相談を実施済み</span><span class="chk-ref">GL第3章第1節③ — 住民範囲について実施場所の市町村に事前相談を行うこと（付録1の様式を使用）</span></span></label>
+              <label class="chk-row"><input type="checkbox" id="briefing_document_ready" class="chk-input"><span class="chk-box"></span><span class="chk-body"><span class="chk-title">説明会配布資料を作成済み</span><span class="chk-ref">GL第3章第4節 — 資料を配布し、当該資料に基づいて説明すること。図面やイメージ写真の活用を推奨</span></span></label>
+              <label class="chk-row"><input type="checkbox" id="question_form_ready" class="chk-input"><span class="chk-box"></span><span class="chk-body"><span class="chk-title">質問募集フォームを設置済み</span><span class="chk-ref">GL第3章第5節2. — 説明会において質問提出用のフォームを設置すること</span></span></label>
+              <label class="chk-row"><input type="checkbox" id="recording_planned" class="chk-input"><span class="chk-box"></span><span class="chk-body"><span class="chk-title">録音・録画の実施を予定</span><span class="chk-ref">GL第3章第5節3. — 説明会の録音・録画について開催案内時に通知し、実施すること</span></span></label>
             </div>
           </div>
         </div></div>
@@ -758,7 +776,16 @@ function restoreSessionForm(se) {
   setV('person_in_charge', se.person_in_charge);
   setV('role_assignment', se.role_assignment);
   setV('distribution_method', se.distribution_method);
+  setChk('municipal_consultation', se.municipal_consultation);
+  setChk('briefing_document_ready', se.briefing_document_ready);
+  setChk('question_form_ready', se.question_form_ready);
+  setChk('recording_planned', se.recording_planned);
   calcNotice();
+}
+
+function setChk(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.checked = (val === 'TRUE' || val === 'true' || val === true);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -994,7 +1021,11 @@ function saveStep3() {
     target_area_description: v('target_area_description'),
     person_in_charge: v('person_in_charge'),
     role_assignment: v('role_assignment'),
-    distribution_method: v('distribution_method')
+    distribution_method: v('distribution_method'),
+    municipal_consultation: document.getElementById('municipal_consultation').checked ? 'TRUE' : 'FALSE',
+    briefing_document_ready: document.getElementById('briefing_document_ready').checked ? 'TRUE' : 'FALSE',
+    question_form_ready: document.getElementById('question_form_ready').checked ? 'TRUE' : 'FALSE',
+    recording_planned: document.getElementById('recording_planned').checked ? 'TRUE' : 'FALSE'
   };
   showToast('保存中...', 'success');
   callGAS('saveSession', data)
@@ -1053,7 +1084,11 @@ function renderConfirm() {
     cfRow('配布方法', se.distribution_method) +
     cfRow('対象区域', se.target_area_description) +
     cfRow('担当者', se.person_in_charge) +
-    cfRow('役割分担', se.role_assignment);
+    cfRow('役割分担', se.role_assignment) +
+    cfRow('市町村事前相談', se.municipal_consultation === 'TRUE' ? '実施済み' : '未実施') +
+    cfRow('説明資料', se.briefing_document_ready === 'TRUE' ? '作成済み' : '未作成') +
+    cfRow('質問フォーム', se.question_form_ready === 'TRUE' ? '設置済み' : '未設置') +
+    cfRow('録音・録画', se.recording_planned === 'TRUE' ? '予定済み' : '未設定');
   runMetiCheck();
 }
 
