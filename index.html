@@ -202,9 +202,12 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
       <div class="ln">SolarExplain</div>
     </div>
     <div class="sb-proj" id="proj-info">
-      <div class="pl">現在のプロジェクト</div>
-      <div class="pn" id="proj-name">未設定</div>
-      <div class="ps" id="proj-sub">初期設定を完了してください</div>
+      <div class="pl">プロジェクト</div>
+      <select class="fi" id="proj-selector" style="background:rgba(255,255,255,.1);color:white;border-color:rgba(255,255,255,.2);font-size:12px;padding:6px 8px;margin-bottom:6px" onchange="switchProject(this.value)">
+        <option value="">読み込み中...</option>
+      </select>
+      <button class="btn btn-p" style="width:100%;font-size:11px;padding:6px 8px" onclick="startNewProject()">＋ 新規プロジェクト</button>
+      <div class="ps" id="proj-sub" style="margin-top:6px">初期設定を完了してください</div>
     </div>
     <nav class="nav">
       <div class="nav-sec">メインメニュー</div>
@@ -546,7 +549,9 @@ var state = {
   plant: null,
   session: null,
   tasks: [],
-  metiResults: []
+  metiResults: [],
+  currentPlantId: null,
+  projects: []
 };
 
 var TITLES = {
@@ -639,7 +644,7 @@ function closeSidebar() {
 // ══════════════════════════════════════════════════════════════
 window.onload = function() {
   loadUserInfo();
-  loadDashboard();
+  loadProjectList();
 };
 
 function loadUserInfo() {
@@ -659,10 +664,117 @@ function loadUserInfo() {
     });
 }
 
+// ══════════════════════════════════════════════════════════════
+// プロジェクト一覧読み込み
+// ══════════════════════════════════════════════════════════════
+function loadProjectList() {
+  callGAS('getProjectList')
+    .then(function(result) {
+      var projects = result.projects || [];
+      state.projects = projects;
+      var sel = document.getElementById('proj-selector');
+      var html = '';
+      if (projects.length === 0) {
+        html = '<option value="">プロジェクトなし</option>';
+      } else {
+        for (var i = 0; i < projects.length; i++) {
+          var p = projects[i];
+          var label = esc(p.plant_name) + '（' + esc(p.capacity_kw) + 'kW）';
+          html += '<option value="' + esc(p.plant_id) + '">' + label + '</option>';
+        }
+      }
+      sel.innerHTML = html;
+
+      // 最後のプロジェクトを自動選択
+      if (projects.length > 0) {
+        var lastProject = projects[projects.length - 1];
+        sel.value = lastProject.plant_id;
+        switchProject(lastProject.plant_id);
+      } else {
+        // プロジェクトなし → 初期設定案内
+        loadDashboardEmpty();
+      }
+    })
+    .catch(function(err) {
+      console.log('loadProjectList error: ' + err);
+      loadDashboardEmpty();
+    });
+}
+
+function loadDashboardEmpty() {
+  document.getElementById('proj-sub').textContent = '「＋ 新規プロジェクト」から開始してください';
+  document.getElementById('task-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray4);font-size:13px">プロジェクトがありません。新規プロジェクトを作成してください。</div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// プロジェクト切替
+// ══════════════════════════════════════════════════════════════
+function switchProject(plantId) {
+  if (!plantId) return;
+  state.currentPlantId = plantId;
+  state.operator = null;
+  state.plant = null;
+  state.session = null;
+  state.tasks = [];
+  loadDashboard();
+}
+
+// ══════════════════════════════════════════════════════════════
+// 新規プロジェクト開始
+// ══════════════════════════════════════════════════════════════
+function startNewProject() {
+  state.currentPlantId = null;
+  state.operator = null;
+  state.plant = null;
+  state.session = null;
+  state.tasks = [];
+  state.metiResults = [];
+
+  // フォームをクリア
+  var inputs = document.querySelectorAll('.fi');
+  for (var i = 0; i < inputs.length; i++) {
+    if (inputs[i].type === 'checkbox') {
+      inputs[i].checked = false;
+    } else {
+      inputs[i].value = '';
+    }
+  }
+
+  // UIリセット
+  document.getElementById('proj-sub').textContent = '新規プロジェクト — 初期設定を開始してください';
+  document.getElementById('setup-badge').style.display = '';
+  document.getElementById('setup-pct').textContent = '0%';
+  document.getElementById('days-left').textContent = '--';
+  document.getElementById('session-date-sub').textContent = '日程未設定';
+  document.getElementById('task-progress').textContent = '--';
+  document.getElementById('dash-title').textContent = '住民説明会SaaS';
+  document.getElementById('dash-sub').textContent = '初期設定を完了してプロジェクトを開始してください';
+  var guide = document.getElementById('dash-guide');
+  if (guide) guide.style.display = '';
+  var outGuide = document.getElementById('output-guide');
+  if (outGuide) outGuide.style.display = '';
+
+  document.getElementById('task-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray4);font-size:13px">初期設定を完了してください。</div>';
+
+  showToast('新規プロジェクトを開始します', 'success');
+
+  // 初期設定Step1へ遷移
+  var items = document.querySelectorAll('.nav-item');
+  for (var j = 0; j < items.length; j++) items[j].classList.remove('active');
+  items[1].classList.add('active');
+  goScreen('setup1');
+  closeSidebar();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ダッシュボード読み込み（プロジェクト対応）
+// ══════════════════════════════════════════════════════════════
 function loadDashboard() {
-  callGAS('getAllData')
-    .then(function(data) {
-      updateDashboard(data);
+  var action = state.currentPlantId ? 'getProjectData' : 'getAllData';
+  var data = state.currentPlantId ? { plantId: state.currentPlantId } : {};
+  callGAS(action, data)
+    .then(function(result) {
+      updateDashboard(result);
     })
     .catch(function(err) {
       console.log('loadDashboard error: ' + err);
@@ -686,7 +798,11 @@ function updateDashboard(data) {
   }
   if (plants.length > 0) {
     state.plant = plants[plants.length - 1];
+    state.currentPlantId = state.plant.plant_id;
     restorePlantForm(state.plant);
+    // ドロップダウンの選択を同期
+    var sel = document.getElementById('proj-selector');
+    if (sel) sel.value = state.plant.plant_id;
   }
   if (sessions.length > 0) {
     state.session = sessions[sessions.length - 1];
@@ -708,7 +824,6 @@ function updateDashboard(data) {
   }
 
   if (state.plant) {
-    document.getElementById('proj-name').textContent = state.plant.plant_name || '--';
     document.getElementById('proj-sub').textContent = (state.plant.location_prefecture || '') + (state.plant.location_city || '') + ' ' + (state.plant.capacity_kw || '--') + 'kW';
     document.getElementById('dash-title').textContent = state.plant.plant_name || '住民説明会SaaS';
   }
@@ -1106,10 +1221,18 @@ function completeSetup() {
   var outGuide = document.getElementById('output-guide');
   if (outGuide) outGuide.style.display = 'none';
   showToast('初期設定が完了しました！', 'success');
+
+  // 新規PJの場合、currentPlantIdを設定
+  if (state.plant && state.plant.plant_id) {
+    state.currentPlantId = state.plant.plant_id;
+  }
+
+  // プロジェクト一覧を再読み込み（新規PJをドロップダウンに反映）
+  loadProjectList();
+
   var items = document.querySelectorAll('.nav-item');
   for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
   items[0].classList.add('active');
-  loadDashboard();
   goScreen('dashboard');
 }
 
