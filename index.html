@@ -1915,17 +1915,7 @@ function importFromPdf() {
     .catch(function(err) {
       showToast('読み取り失敗: ' + (err.message || ''), 'error');
     });
-}    showToast('PDF読み取り中...', 'success');
-    callGAS('importFromPdf', { fileId: fileId })
-      .then(function(result) {
-        pdfExtracted = result.extracted || {};
-        renderPdfPreview(pdfExtracted);
-        showToast('PDF読み取り完了', 'success');
-      })
-      .catch(function(err) {
-        showToast('読み取り失敗: ' + (err.message || ''), 'error');
-      });
-  }
+ }
 
   function renderPdfPreview(extracted) {
     var labelMap = {
