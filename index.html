@@ -1580,7 +1580,7 @@ function exportSchedule() { exportSheet(); }
 
 function exportFlyer() {
   showToast('案内チラシを生成中...', 'success');
-  callGAS('generateFlyer')
+  callGAS('generateFlyer', { plantId: state.currentPlantId || '' })
     .then(function(result) {
       window.open(result.url, '_blank');
       showToast('案内チラシを開きました', 'success');
