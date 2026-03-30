@@ -790,15 +790,17 @@
     state.tasks = [];
     state.metiResults = [];
 
-    // フォームをクリア
-    var inputs = document.querySelectorAll('.fi');
-    for (var i = 0; i < inputs.length; i++) {
-      if (inputs[i].type === 'checkbox') {
-        inputs[i].checked = false;
-      } else {
-        inputs[i].value = '';
-      }
-    }
+// フォームをクリア（プロジェクト選択・フォルダIDは除外）
+var inputs = document.querySelectorAll('.fi');
+for (var i = 0; i < inputs.length; i++) {
+  var id = inputs[i].id;
+  if (id === 'proj-selector' || id === 'pdf-folder-id') continue;
+  if (inputs[i].type === 'checkbox') {
+    inputs[i].checked = false;
+  } else {
+    inputs[i].value = '';
+  }
+}
 
     // UIリセット
     document.getElementById('proj-sub').textContent = '新規プロジェクト — 初期設定を開始してください';
@@ -1303,42 +1305,46 @@
   var scheduleSessionDate = null;
   var scheduleTasks = [];
 
-  function loadSchedule() {
-    callGAS('getAllData')
-      .then(function(data) {
-        var tasks = data['タスク管理'] || [];
-        var sessions = data['説明会セッション'] || [];
-        var session = sessions.length > 0 ? sessions[sessions.length - 1] : null;
-        var tDay = session ? safeDate(session.session_date) : null;
-        scheduleSessionDate = tDay;
-        scheduleTasks = tasks;
-        var tDayInfo = document.getElementById('t-day-info');
-        if (tDay && tDayInfo) {
-          tDayInfo.textContent = '住民説明会開催日：' + tDay;
-          tDayInfo.style.color = 'var(--blue)';
-          tDayInfo.style.fontWeight = '600';
-        }
-        if (tasks.length === 0) {
-          document.getElementById('schedule-list').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--gray4)">タスクがありません。初期設定で説明会開催日を入力してください。</td></tr>';
-          document.getElementById('timeline-bar').innerHTML = '<div style="color:var(--gray4);font-size:13px">初期設定を完了するとタイムラインが表示されます</div>';
-          document.getElementById('calendar-container').innerHTML = '<div style="color:var(--gray4);font-size:13px">初期設定を完了するとカレンダーが表示されます</div>';
-          return;
-        }
-        var done = 0;
-        for (var i = 0; i < tasks.length; i++) {
-          if (tasks[i].status === '完了') done++;
-        }
-        var pct = Math.round(done / tasks.length * 100);
-        document.getElementById('task-pb').style.width = pct + '%';
-        document.getElementById('task-pb-label').textContent = 'タスク進捗 ' + done + ' / ' + tasks.length + '（' + pct + '%）';
-        renderTimelineBar(tasks);
-        renderScheduleTable(tasks);
-        if (tDay) renderCalendar(tasks, tDay, 0);
-      })
-      .catch(function(err) {
-        console.log('loadSchedule error: ' + err);
-      });
+function loadSchedule() {
+  if (!state.currentPlantId) {
+    document.getElementById('schedule-list').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--gray4)">プロジェクトを選択してください。</td></tr>';
+    return;
   }
+  callGAS('getProjectData', { plantId: state.currentPlantId })
+    .then(function(data) {
+      var tasks = data['タスク管理'] || [];
+      var sessions = data['説明会セッション'] || [];
+      var session = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+      var tDay = session ? safeDate(session.session_date) : null;
+      scheduleSessionDate = tDay;
+      scheduleTasks = tasks;
+      var tDayInfo = document.getElementById('t-day-info');
+      if (tDay && tDayInfo) {
+        tDayInfo.textContent = '住民説明会開催日：' + tDay;
+        tDayInfo.style.color = 'var(--blue)';
+        tDayInfo.style.fontWeight = '600';
+      }
+      if (tasks.length === 0) {
+        document.getElementById('schedule-list').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--gray4)">タスクがありません。初期設定で説明会開催日を入力してください。</td></tr>';
+        document.getElementById('timeline-bar').innerHTML = '<div style="color:var(--gray4);font-size:13px">初期設定を完了するとタイムラインが表示されます</div>';
+        document.getElementById('calendar-container').innerHTML = '<div style="color:var(--gray4);font-size:13px">初期設定を完了するとカレンダーが表示されます</div>';
+        return;
+      }
+      var done = 0;
+      for (var i = 0; i < tasks.length; i++) {
+        if (tasks[i].status === '完了') done++;
+      }
+      var pct = Math.round(done / tasks.length * 100);
+      document.getElementById('task-pb').style.width = pct + '%';
+      document.getElementById('task-pb-label').textContent = 'タスク進捗 ' + done + ' / ' + tasks.length + '（' + pct + '%）';
+      renderTimelineBar(tasks);
+      renderScheduleTable(tasks);
+      if (tDay) renderCalendar(tasks, tDay, 0);
+    })
+    .catch(function(err) {
+      console.log('loadSchedule error: ' + err);
+    });
+}
 
   function renderTimelineBar(tasks) {
     var bar = document.getElementById('timeline-bar');
