@@ -279,8 +279,29 @@ body{font-family:var(--sans);background:var(--gray0);color:var(--text);font-size
           <div class="step pend"><div class="step-c">3</div><div class="step-lbl">説明会設定</div></div>
           <div class="step-ln"></div>
           <div class="step pend"><div class="step-c">4</div><div class="step-lbl">確認・完了</div></div>
+</div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="ch"><div class="ct">申請書類PDFから自動入力 <span class="mbdg">NEW</span></div></div>
+          <div class="cb">
+            <div class="ib blue" style="margin-bottom:12px">
+              <div class="it">PDFインポート機能</div>
+              申請書類PDFをGoogle Driveにアップロードし、ファイルIDを入力すると初期設定項目を自動抽出します。
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input class="fi" id="pdf-file-id" type="text" placeholder="Google DriveのファイルID（URLの/d/と/editの間）" style="flex:1;min-width:200px">
+              <button class="btn btn-o" onclick="importFromPdf()">PDFを読み取る</button>
+            </div>
+            <div id="pdf-preview" style="margin-top:12px;display:none">
+              <div class="fsec-t" style="margin-bottom:8px">抽出結果プレビュー</div>
+              <table class="dt" id="pdf-preview-table"></table>
+              <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px">
+                <button class="btn btn-o" onclick="cancelPdfImport()">キャンセル</button>
+                <button class="btn btn-p" onclick="applyPdfImport()">フォームに反映する</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card"><div class="cb">
+                  <div class="card"><div class="cb">
           <div class="fsec"><div class="fsec-t">事業者情報</div>
             <div class="fg">
               <div class="fgrp s2"><div class="flbl">事業者名称 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" id="company_name" type="text" placeholder="例：株式会社ソーラーエナジー"></div>
@@ -960,7 +981,7 @@ function renderTaskList(tasks) {
 function runMetiCheck() {
   var plantData = state.plant || {};
   var sessionData = state.session || {};
-  callGAS('runMetiCheck', { plant: plantData, session: sessionData })
+callGAS('runMetiCheck', { plant: plantData, session: sessionData, plantId: state.currentPlantId || '' })
     .then(function(results) {
       state.metiResults = results;
       renderMetiResults(results);
@@ -1591,8 +1612,12 @@ function exportFlyer() {
 }
 
 function exportSlides() {
+  if (!state.currentPlantId) {
+    showToast('プロジェクトが選択されていません', 'error');
+    return;
+  }
   showToast('住民説明会資料を生成中...（テンプレートコピー＋データ差し込み）', 'success');
-  callGAS('generateSlides')
+  callGAS('generateSlides', { plantId: state.currentPlantId })
     .then(function(result) {
       window.open(result.url, '_blank');
       showToast('住民説明会資料をGoogle Slidesで開きました。画像追加・編集が可能です。', 'success');
@@ -1841,7 +1866,68 @@ function showToast(msg, type) {
   clearTimeout(tt);
   tt = setTimeout(function() { t.classList.remove('show'); }, 3500);
 }
+var pdfExtracted = {};
 
+function importFromPdf() {
+  var fileId = v('pdf-file-id').trim();
+  if (!fileId) { showToast('ファイルIDを入力してください', 'error'); return; }
+  showToast('PDF読み取り中...', 'success');
+  callGAS('importFromPdf', { fileId: fileId })
+    .then(function(result) {
+      pdfExtracted = result.extracted || {};
+      renderPdfPreview(pdfExtracted);
+      showToast('PDF読み取り完了', 'success');
+    })
+    .catch(function(err) {
+      showToast('読み取り失敗: ' + (err.message || ''), 'error');
+    });
+}
+
+function renderPdfPreview(extracted) {
+  var labelMap = {
+    company_name: '事業者名称', representative_name: '代表者名',
+    contact_tel: '連絡先TEL', plant_name: '発電所名称',
+    location_prefecture: '都道府県', capacity_kw: '発電出力(kW)',
+    certification_number: '認定番号', fip_fit_type: 'FIT/FIP区分',
+    construction_start: '工事開始予定日', construction_end: '工事完了予定日',
+    operation_start: '運転開始予定日'
+  };
+  var html = '<thead><tr><th>項目</th><th>抽出値</th></tr></thead><tbody>';
+  var hasData = false;
+  for (var key in labelMap) {
+    if (extracted[key]) {
+      html += '<tr><td>' + esc(labelMap[key]) + '</td><td style="color:var(--green);font-weight:500">' + esc(extracted[key]) + '</td></tr>';
+      hasData = true;
+    }
+  }
+  if (!hasData) {
+    html += '<tr><td colspan="2" style="color:var(--gray4);text-align:center">抽出できた項目がありません。手動で入力してください。</td></tr>';
+  }
+  html += '</tbody>';
+  document.getElementById('pdf-preview-table').innerHTML = html;
+  document.getElementById('pdf-preview').style.display = '';
+}
+
+function applyPdfImport() {
+  if (pdfExtracted.company_name)        setV('company_name', pdfExtracted.company_name);
+  if (pdfExtracted.representative_name) setV('representative_name', pdfExtracted.representative_name);
+  if (pdfExtracted.contact_tel)         setV('contact_tel', pdfExtracted.contact_tel);
+  if (pdfExtracted.plant_name)          setV('plant_name', pdfExtracted.plant_name);
+  if (pdfExtracted.location_prefecture) setV('location_prefecture', pdfExtracted.location_prefecture);
+  if (pdfExtracted.capacity_kw)         setV('capacity_kw', pdfExtracted.capacity_kw);
+  if (pdfExtracted.certification_number)setV('certification_number', pdfExtracted.certification_number);
+  if (pdfExtracted.fip_fit_type)        setV('fip_fit_type', pdfExtracted.fip_fit_type);
+  if (pdfExtracted.construction_start)  setV('construction_start', pdfExtracted.construction_start);
+  if (pdfExtracted.construction_end)    setV('construction_end', pdfExtracted.construction_end);
+  if (pdfExtracted.operation_start)     setV('operation_start', pdfExtracted.operation_start);
+  document.getElementById('pdf-preview').style.display = 'none';
+  showToast('フォームに反映しました。内容を確認してください。', 'success');
+}
+
+function cancelPdfImport() {
+  document.getElementById('pdf-preview').style.display = 'none';
+  pdfExtracted = {};
+}
 // ══════════════════════════════════════════════════════════════
 // METIピル → コンプライアンス画面ジャンプ
 // ══════════════════════════════════════════════════════════════
