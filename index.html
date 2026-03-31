@@ -1477,8 +1477,7 @@ function renderGantt(tasks, sessionDateStr) {
   html += '</div>';
   html += '</div>';
 
-  // ── タスク行 ──────────────────────────────────────────────
-  for (var i = 0; i < tasks.length; i++) {
+for (var i = 0; i < tasks.length; i++) {
     var task = tasks[i];
     var isMeti = String(task.is_meti_required) === 'TRUE' || String(task.is_meti_required) === 'true';
     var isDone = task.status === '完了';
@@ -1490,50 +1489,67 @@ function renderGantt(tasks, sessionDateStr) {
       ? parseInt(task.work_end_offset)
       : (task.rangeEnd !== null && task.rangeEnd !== undefined ? parseInt(task.rangeEnd) : offset);
 
-    var dlIdx   = offset    + DAYS_BEFORE;
+    var dlIdx    = offset + DAYS_BEFORE;
+    // ★ barStart/barEnd はグリッド内インデックス（0〜totalDays-1）
     var barStart = Math.min(workStart, workEnd) + DAYS_BEFORE;
     var barEnd   = Math.max(workStart, workEnd) + DAYS_BEFORE;
-    var barLen   = barEnd - barStart + 1;
+    // 範囲外クランプ
+    barStart = Math.max(0, Math.min(barStart, totalDays - 1));
+    barEnd   = Math.max(0, Math.min(barEnd,   totalDays - 1));
+    var barLen = barEnd - barStart + 1;
 
     var rowBg = isDone ? '#F0FDF4' : (i % 2 === 0 ? 'white' : 'var(--gray0)');
     var tid = esc(task.task_id || '');
+    var barColor = isDone ? 'var(--green)' : isMeti ? 'var(--blue)' : 'var(--gray4)';
+    var barOpacity = isDone ? '0.5' : '0.8';
+
+    var gridW = totalDays * DAY_W;
 
     html += '<div style="display:flex;height:' + ROW_H + 'px;border-bottom:1px solid var(--gray1);background:' + rowBg + '">';
-    html += '<div style="width:' + LABEL_W + 'px;flex-shrink:0;display:flex;align-items:center;padding:0 8px;border-right:2px solid var(--gray3);gap:4px">';
+
+    // ラベル列
+    html += '<div style="width:' + LABEL_W + 'px;min-width:' + LABEL_W + 'px;flex-shrink:0;display:flex;align-items:center;padding:0 8px;border-right:2px solid var(--gray3);gap:4px">';
     html += '<div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:' + (LABEL_W - 40) + 'px">' + esc(task.task_name || '') + '</div>';
     if (isMeti) html += '<span style="font-size:9px;background:var(--red-light);color:var(--red);padding:1px 4px;border-radius:3px;flex-shrink:0">METI</span>';
     html += '</div>';
 
-    // グリッド領域全体を1つのdivで包む（バーをその中にabsoluteで配置）
-    var gridW = totalDays * DAY_W;
-    html += '<div style="position:relative;width:' + gridW + 'px;height:' + ROW_H + 'px;flex-shrink:0">';
+    // ★ グリッド領域：flex-shrink:0 + overflow:visible で幅を確保
+    html += '<div style="position:relative;width:' + gridW + 'px;min-width:' + gridW + 'px;flex-shrink:0;height:' + ROW_H + 'px;overflow:visible">';
 
-    // 縦線・背景（日付セルの背景色を再現）
+    // 日付セル背景（ストライプ）
     for (var d3 = 0; d3 < totalDays; d3++) {
       var dt3 = new Date(startDate);
       dt3.setDate(dt3.getDate() + d3);
-      var isT3 = dt3.getTime() === T.getTime();
+      var isT3     = dt3.getTime() === T.getTime();
       var isToday3 = dt3.getTime() === today.getTime();
       var dow3 = dt3.getDay();
-      var cellBg = isT3 ? 'rgba(200,30,30,0.06)' : isToday3 ? 'rgba(26,86,219,0.06)' : (dow3 === 0 || dow3 === 6) ? 'var(--gray1)' : 'transparent';
-      html += '<div style="position:absolute;left:' + (d3 * DAY_W) + 'px;top:0;width:' + DAY_W + 'px;height:' + ROW_H + 'px;background:' + cellBg + ';border-right:1px solid var(--gray1)"></div>';
+      var cellBg = isT3     ? 'rgba(200,30,30,0.06)'
+                 : isToday3 ? 'rgba(26,86,219,0.06)'
+                 : (dow3 === 0 || dow3 === 6) ? 'rgba(0,0,0,0.03)'
+                 : 'transparent';
+      if (cellBg !== 'transparent') {
+        html += '<div style="position:absolute;left:' + (d3 * DAY_W) + 'px;top:0;width:' + DAY_W + 'px;height:' + ROW_H + 'px;background:' + cellBg + ';pointer-events:none"></div>';
+      }
+      // 縦線
+      html += '<div style="position:absolute;left:' + ((d3 + 1) * DAY_W - 1) + 'px;top:0;width:1px;height:' + ROW_H + 'px;background:var(--gray2);pointer-events:none"></div>';
     }
 
-    // バー（barLen > 1 の場合）
-    if (barLen > 1) {
-      var barColor = isDone ? 'var(--green)' : isMeti ? 'var(--blue)' : 'var(--gray4)';
+    // ★ バー（barLen >= 1 で必ず描画）
+    if (barLen >= 1) {
       var barLeft = barStart * DAY_W + 2;
-      var barW    = barLen * DAY_W - 4;
+      var barW    = Math.max(DAY_W - 4, barLen * DAY_W - 4);
       html += '<div class="gantt-bar"'
             + ' data-tid="' + tid + '"'
             + ' data-start="' + workStart + '"'
             + ' data-end="' + workEnd + '"'
             + ' data-day-w="' + DAY_W + '"'
             + ' data-days-before="' + DAYS_BEFORE + '"'
+            + ' data-done="' + isDone + '"'
             + ' style="position:absolute;left:' + barLeft + 'px;top:8px;width:' + barW + 'px;height:24px;'
-            + 'background:' + barColor + ';border-radius:4px;opacity:' + (isDone ? '0.5' : '0.8') + ';z-index:2;'
+            + 'background:' + barColor + ';border-radius:4px;opacity:' + barOpacity + ';z-index:3;'
             + 'display:flex;align-items:center;justify-content:flex-end;cursor:default;user-select:none">'
-            + '<div class="gantt-resize-handle" style="width:10px;height:100%;cursor:ew-resize;'
+            + '<div class="gantt-resize-handle"'
+            + ' style="width:10px;height:100%;cursor:ew-resize;'
             + 'background:rgba(255,255,255,0.5);border-radius:0 4px 4px 0;flex-shrink:0"></div>'
             + '</div>';
     }
@@ -1541,15 +1557,15 @@ function renderGantt(tasks, sessionDateStr) {
     // デッドラインマーカー
     if (dlIdx >= 0 && dlIdx < totalDays) {
       var dlColor = isDone ? 'var(--green)' : isMeti ? 'var(--red)' : 'var(--gray5)';
-      var dlLeft = dlIdx * DAY_W + DAY_W / 2;
+      var dlLeft  = dlIdx * DAY_W + DAY_W / 2;
       html += '<div style="position:absolute;left:' + dlLeft + 'px;top:50%;transform:translate(-50%,-50%);'
-            + 'font-size:14px;color:' + dlColor + ';z-index:3;pointer-events:none" title="'
-            + esc(safeDate(task.deadline)) + '">◆</div>';
+            + 'font-size:14px;color:' + dlColor + ';z-index:4;pointer-events:none"'
+            + ' title="' + esc(safeDate(task.deadline)) + '">◆</div>';
     }
 
     html += '</div>'; // グリッド領域
     html += '</div>'; // 行
-  }
+    }
 
   html += '<div style="display:flex;align-items:center;gap:16px;padding:10px 8px;font-size:11px;color:var(--gray5);border-top:1px solid var(--gray2);margin-top:4px;flex-wrap:wrap">';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--blue);border-radius:3px;opacity:0.8"></span>作業期間（METI）</span>';
