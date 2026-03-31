@@ -212,11 +212,12 @@
         <div class="pl">プロジェクト</div>
         <select class="fi" id="proj-selector" style="background:rgba(255,255,255,.1);color:white;border-color:rgba(255,255,255,.2);font-size:12px;padding:6px 8px;margin-bottom:6px" onchange="switchProject(this.value)">
           <option value="">読み込み中...</option>
-        </select>
+</select>
         <button class="btn btn-p" style="width:100%;font-size:11px;padding:6px 8px" onclick="startNewProject()">＋ 新規プロジェクト</button>
+        <button class="btn" style="width:100%;font-size:11px;padding:6px 8px;background:var(--red-light);color:var(--red);border:1px solid #FCA5A5;margin-top:4px" onclick="deleteCurrentProject()">✕ このプロジェクトを削除</button>
         <div class="ps" id="proj-sub" style="margin-top:6px">初期設定を完了してください</div>
       </div>
-      <nav class="nav">
+            <nav class="nav">
         <div class="nav-sec">メインメニュー</div>
         <div class="nav-item active" onclick="setNav(this,'dashboard')">ダッシュボード</div>
         <div class="nav-item" onclick="setNav(this,'setup1')">初期設定<span class="nav-badge" id="setup-badge">!</span></div>
