@@ -512,16 +512,20 @@
           <div class="card" style="margin-bottom:16px">
             <div class="ch">
               <div class="ct">住民説明会開催日基準スケジュール</div>
-              <div style="display:flex;gap:4px">
+<div style="display:flex;gap:4px">
                 <button class="btn btn-p view-toggle" id="btn-timeline" onclick="switchView('timeline')" style="padding:5px 12px;font-size:12px">タイムライン</button>
+                <button class="btn btn-o view-toggle" id="btn-gantt" onclick="switchView('gantt')" style="padding:5px 12px;font-size:12px">ガントチャート</button>
                 <button class="btn btn-o view-toggle" id="btn-calendar" onclick="switchView('calendar')" style="padding:5px 12px;font-size:12px">カレンダー</button>
               </div>
-            </div>
+                          </div>
             <div class="cb" style="padding:12px 20px">
               <div id="view-timeline" style="overflow-x:auto;padding:8px 0">
                 <div id="timeline-bar">
                   <div class="loading"><div class="spinner"></div>読み込み中...</div>
                 </div>
+              </div>
+              <div id="view-gantt" style="display:none;overflow-x:auto">
+                <div id="gantt-container"></div>
               </div>
               <div id="view-calendar" style="display:none">
                 <div id="calendar-container">
@@ -1383,27 +1387,206 @@ function loadSchedule() {
   // ══════════════════════════════════════════════════════════════
   var currentCalOffset = 0;
 
-  function switchView(mode) {
-    var tl = document.getElementById('view-timeline');
-    var cal = document.getElementById('view-calendar');
-    var btnTl = document.getElementById('btn-timeline');
-    var btnCal = document.getElementById('btn-calendar');
-    if (mode === 'timeline') {
-      tl.style.display = '';
-      cal.style.display = 'none';
-      btnTl.className = 'btn btn-p view-toggle';
-      btnCal.className = 'btn btn-o view-toggle';
-    } else {
-      tl.style.display = 'none';
-      cal.style.display = '';
-      btnTl.className = 'btn btn-o view-toggle';
-      btnCal.className = 'btn btn-p view-toggle';
-      currentCalOffset = 0;
-      if (scheduleSessionDate && scheduleTasks.length > 0) {
-        renderCalendar(scheduleTasks, scheduleSessionDate, 0);
-      }
+function switchView(mode) {
+  var tl = document.getElementById('view-timeline');
+  var gc = document.getElementById('view-gantt');
+  var cal = document.getElementById('view-calendar');
+  var btnTl = document.getElementById('btn-timeline');
+  var btnGc = document.getElementById('btn-gantt');
+  var btnCal = document.getElementById('btn-calendar');
+
+  tl.style.display = 'none';
+  gc.style.display = 'none';
+  cal.style.display = 'none';
+  btnTl.className = 'btn btn-o view-toggle';
+  btnGc.className = 'btn btn-o view-toggle';
+  btnCal.className = 'btn btn-o view-toggle';
+
+  if (mode === 'timeline') {
+    tl.style.display = '';
+    btnTl.className = 'btn btn-p view-toggle';
+  } else if (mode === 'gantt') {
+    gc.style.display = '';
+    btnGc.className = 'btn btn-p view-toggle';
+    if (scheduleSessionDate && scheduleTasks.length > 0) {
+      renderGantt(scheduleTasks, scheduleSessionDate);
+    }
+  } else {
+    cal.style.display = '';
+    btnCal.className = 'btn btn-p view-toggle';
+    if (scheduleSessionDate && scheduleTasks.length > 0) {
+      renderCalendar(scheduleTasks, scheduleSessionDate, 0);
     }
   }
+}
+// ══════════════════════════════════════════════════════════════
+// ガントチャート
+// ══════════════════════════════════════════════════════════════
+var ganttDragState = null;
+
+function renderGantt(tasks, sessionDateStr) {
+  var container = document.getElementById('gantt-container');
+  var T = new Date(sessionDateStr);
+  T.setHours(0, 0, 0, 0);
+
+  var DAYS_BEFORE = 40;
+  var DAYS_AFTER = 30;
+  var totalDays = DAYS_BEFORE + DAYS_AFTER + 1;
+  var startDate = new Date(T);
+  startDate.setDate(startDate.getDate() - DAYS_BEFORE);
+
+  var LABEL_W = 220;
+  var DAY_W = 28;
+  var ROW_H = 40;
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  var months = {};
+  for (var d = 0; d < totalDays; d++) {
+    var dt = new Date(startDate);
+    dt.setDate(dt.getDate() + d);
+    var mk = dt.getFullYear() + '-' + dt.getMonth();
+    if (!months[mk]) months[mk] = { start: d, label: (dt.getMonth() + 1) + '月', count: 0 };
+    months[mk].count++;
+  }
+
+  var html = '<div style="position:relative;font-family:var(--sans)">';
+  html += '<div style="position:sticky;top:0;z-index:10;background:white">';
+  html += '<div style="display:flex;margin-left:' + LABEL_W + 'px;border-bottom:1px solid var(--gray2)">';
+  for (var mk2 in months) {
+    var mo = months[mk2];
+    html += '<div style="width:' + (mo.count * DAY_W) + 'px;text-align:center;font-size:11px;font-weight:700;color:var(--navy);padding:3px 0;border-right:1px solid var(--gray2);flex-shrink:0">' + mo.label + '</div>';
+  }
+  html += '</div>';
+
+  html += '<div style="display:flex">';
+  html += '<div style="width:' + LABEL_W + 'px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--gray5);padding:4px 8px;border-bottom:1px solid var(--gray2);border-right:2px solid var(--gray3)">タスク</div>';
+  for (var d2 = 0; d2 < totalDays; d2++) {
+    var dt2 = new Date(startDate);
+    dt2.setDate(dt2.getDate() + d2);
+    var isT = dt2.getTime() === T.getTime();
+    var isToday2 = dt2.getTime() === today.getTime();
+    var dow = dt2.getDay();
+    var bgCol = isT ? 'var(--red-light)' : isToday2 ? 'var(--blue-light)' : (dow === 0 || dow === 6) ? 'var(--gray1)' : 'white';
+    var txCol = isT ? 'var(--red)' : isToday2 ? 'var(--blue)' : (dow === 0 || dow === 6) ? 'var(--gray4)' : 'var(--gray5)';
+    html += '<div style="width:' + DAY_W + 'px;flex-shrink:0;text-align:center;font-size:10px;font-family:var(--mono);color:' + txCol + ';background:' + bgCol + ';border-bottom:1px solid var(--gray2);border-right:1px solid var(--gray1);padding:2px 0;font-weight:' + (isT ? '700' : '400') + '">';
+    html += dt2.getDate();
+    if (isT) html += '<div style="font-size:9px">T</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  for (var i = 0; i < tasks.length; i++) {
+    var task = tasks[i];
+    var isMeti = String(task.is_meti_required) === 'TRUE' || String(task.is_meti_required) === 'true';
+    var isDone = task.status === '完了';
+    var offset = parseInt(task.days_before_session) || 0;
+
+    var workStart = (task.work_start_offset !== undefined && task.work_start_offset !== '') ? parseInt(task.work_start_offset) : offset;
+    var workEnd = (task.work_end_offset !== undefined && task.work_end_offset !== '') ? parseInt(task.work_end_offset) : (task.rangeEnd !== null && task.rangeEnd !== undefined ? parseInt(task.rangeEnd) : offset);
+
+    var dlIdx = offset + DAYS_BEFORE;
+    var barStart = Math.min(workStart, workEnd) + DAYS_BEFORE;
+    var barEnd = Math.max(workStart, workEnd) + DAYS_BEFORE;
+    var barLen = barEnd - barStart + 1;
+
+    var rowBg = isDone ? '#F0FDF4' : (i % 2 === 0 ? 'white' : 'var(--gray0)');
+    var tid = esc(task.task_id || '');
+
+    html += '<div style="display:flex;height:' + ROW_H + 'px;border-bottom:1px solid var(--gray1);background:' + rowBg + '">';
+    html += '<div style="width:' + LABEL_W + 'px;flex-shrink:0;display:flex;align-items:center;padding:0 8px;border-right:2px solid var(--gray3);gap:4px">';
+    html += '<div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:' + (LABEL_W - 40) + 'px">' + esc(task.task_name || '') + '</div>';
+    if (isMeti) html += '<span style="font-size:9px;background:var(--red-light);color:var(--red);padding:1px 4px;border-radius:3px;flex-shrink:0">METI</span>';
+    html += '</div>';
+
+    for (var d3 = 0; d3 < totalDays; d3++) {
+      var dt3 = new Date(startDate);
+      dt3.setDate(dt3.getDate() + d3);
+      var isT3 = dt3.getTime() === T.getTime();
+      var isToday3 = dt3.getTime() === today.getTime();
+      var dow3 = dt3.getDay();
+      var cellBg = isT3 ? 'rgba(200,30,30,0.06)' : isToday3 ? 'rgba(26,86,219,0.06)' : (dow3 === 0 || dow3 === 6) ? 'var(--gray1)' : 'transparent';
+
+      var cellContent = '';
+
+      if (d3 === barStart && barLen > 1) {
+        var barColor = isDone ? 'var(--green)' : isMeti ? 'var(--blue)' : 'var(--gray4)';
+        var barW = (barLen * DAY_W) - 4;
+        cellContent += '<div class="gantt-bar" data-tid="' + tid + '" data-start="' + workStart + '" data-end="' + workEnd + '"';
+        cellContent += ' style="position:absolute;left:2px;top:8px;width:' + barW + 'px;height:24px;background:' + barColor + ';border-radius:4px;opacity:' + (isDone ? '0.5' : '0.7') + ';z-index:2;display:flex;align-items:center;justify-content:flex-end;padding-right:2px">';
+        cellContent += '<div class="gantt-resize-handle" style="width:8px;height:100%;cursor:ew-resize;background:rgba(255,255,255,0.4);border-radius:0 4px 4px 0"></div>';
+        cellContent += '</div>';
+      }
+
+      if (d3 === dlIdx) {
+        var dlColor = isDone ? 'var(--green)' : isMeti ? 'var(--red)' : 'var(--gray5)';
+        cellContent += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:' + dlColor + ';z-index:3" title="' + esc(safeDate(task.deadline)) + '">◆</div>';
+      }
+
+      html += '<div style="width:' + DAY_W + 'px;flex-shrink:0;position:relative;background:' + cellBg + ';border-right:1px solid var(--gray1)">' + cellContent + '</div>';
+    }
+
+    html += '</div>';
+  }
+
+  html += '<div style="display:flex;align-items:center;gap:16px;padding:10px 8px;font-size:11px;color:var(--gray5);border-top:1px solid var(--gray2);margin-top:4px;flex-wrap:wrap">';
+  html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--blue);border-radius:3px;opacity:0.7"></span>作業期間（METI）</span>';
+  html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--gray4);border-radius:3px;opacity:0.7"></span>作業期間</span>';
+  html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--red);font-size:14px">◆</span>デッドライン（METI）</span>';
+  html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--gray5);font-size:14px">◆</span>デッドライン</span>';
+  html += '<span style="color:var(--blue)">※バー右端をドラッグして作業期間を変更できます</span>';
+  html += '</div>';
+  html += '</div>';
+
+  container.innerHTML = html;
+  initGanttDrag();
+}
+
+function initGanttDrag() {
+  var bars = document.querySelectorAll('.gantt-bar');
+  for (var i = 0; i < bars.length; i++) {
+    (function(bar) {
+      var handle = bar.querySelector('.gantt-resize-handle');
+      if (!handle) return;
+      handle.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        var startX = e.clientX;
+        var origWidth = bar.offsetWidth;
+        var DAY_W = 28;
+        var workEnd = parseInt(bar.getAttribute('data-end'));
+        var workStart = parseInt(bar.getAttribute('data-start'));
+        var tid = bar.getAttribute('data-tid');
+
+        function onMove(ev) {
+          var dx = ev.clientX - startX;
+          var dayDelta = Math.round(dx / DAY_W);
+          var newWidth = Math.max(DAY_W, origWidth + dayDelta * DAY_W);
+          bar.style.width = newWidth + 'px';
+          bar.setAttribute('data-end', workEnd + dayDelta);
+        }
+
+        function onUp() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          var newEnd = parseInt(bar.getAttribute('data-end'));
+          if (newEnd !== workEnd) {
+            saveGanttPeriod(tid, workStart, newEnd);
+          }
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    })(bars[i]);
+  }
+}
+
+function saveGanttPeriod(taskId, workStart, workEnd) {
+  callGAS('updateTaskPeriod', { taskId: taskId, workStart: workStart, workEnd: workEnd })
+    .then(function() { showToast('作業期間を更新しました', 'success'); })
+    .catch(function(err) { showToast('更新失敗: ' + (err.message || ''), 'error'); });
+}
 
   // ══════════════════════════════════════════════════════════════
   // カレンダー表示
