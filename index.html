@@ -1477,19 +1477,23 @@ function renderGantt(tasks, sessionDateStr) {
   html += '</div>';
   html += '</div>';
 
+  // ── タスク行 ──────────────────────────────────────────────
   for (var i = 0; i < tasks.length; i++) {
     var task = tasks[i];
     var isMeti = String(task.is_meti_required) === 'TRUE' || String(task.is_meti_required) === 'true';
     var isDone = task.status === '完了';
     var offset = parseInt(task.days_before_session) || 0;
 
-    var workStart = (task.work_start_offset !== undefined && task.work_start_offset !== '') ? parseInt(task.work_start_offset) : offset;
-    var workEnd = (task.work_end_offset !== undefined && task.work_end_offset !== '') ? parseInt(task.work_end_offset) : (task.rangeEnd !== null && task.rangeEnd !== undefined ? parseInt(task.rangeEnd) : offset);
+    var workStart = (task.work_start_offset !== undefined && task.work_start_offset !== '')
+      ? parseInt(task.work_start_offset) : offset;
+    var workEnd = (task.work_end_offset !== undefined && task.work_end_offset !== '')
+      ? parseInt(task.work_end_offset)
+      : (task.rangeEnd !== null && task.rangeEnd !== undefined ? parseInt(task.rangeEnd) : offset);
 
-    var dlIdx = offset + DAYS_BEFORE;
+    var dlIdx   = offset    + DAYS_BEFORE;
     var barStart = Math.min(workStart, workEnd) + DAYS_BEFORE;
-    var barEnd = Math.max(workStart, workEnd) + DAYS_BEFORE;
-    var barLen = barEnd - barStart + 1;
+    var barEnd   = Math.max(workStart, workEnd) + DAYS_BEFORE;
+    var barLen   = barEnd - barStart + 1;
 
     var rowBg = isDone ? '#F0FDF4' : (i % 2 === 0 ? 'white' : 'var(--gray0)');
     var tid = esc(task.task_id || '');
@@ -1500,6 +1504,11 @@ function renderGantt(tasks, sessionDateStr) {
     if (isMeti) html += '<span style="font-size:9px;background:var(--red-light);color:var(--red);padding:1px 4px;border-radius:3px;flex-shrink:0">METI</span>';
     html += '</div>';
 
+    // グリッド領域全体を1つのdivで包む（バーをその中にabsoluteで配置）
+    var gridW = totalDays * DAY_W;
+    html += '<div style="position:relative;width:' + gridW + 'px;height:' + ROW_H + 'px;flex-shrink:0">';
+
+    // 縦線・背景（日付セルの背景色を再現）
     for (var d3 = 0; d3 < totalDays; d3++) {
       var dt3 = new Date(startDate);
       dt3.setDate(dt3.getDate() + d3);
@@ -1507,32 +1516,44 @@ function renderGantt(tasks, sessionDateStr) {
       var isToday3 = dt3.getTime() === today.getTime();
       var dow3 = dt3.getDay();
       var cellBg = isT3 ? 'rgba(200,30,30,0.06)' : isToday3 ? 'rgba(26,86,219,0.06)' : (dow3 === 0 || dow3 === 6) ? 'var(--gray1)' : 'transparent';
-
-      var cellContent = '';
-
-      if (d3 === barStart && barLen > 1) {
-        var barColor = isDone ? 'var(--green)' : isMeti ? 'var(--blue)' : 'var(--gray4)';
-        var barW = (barLen * DAY_W) - 4;
-        cellContent += '<div class="gantt-bar" data-tid="' + tid + '" data-start="' + workStart + '" data-end="' + workEnd + '"';
-        cellContent += ' style="position:absolute;left:2px;top:8px;width:' + barW + 'px;height:24px;background:' + barColor + ';border-radius:4px;opacity:' + (isDone ? '0.5' : '0.7') + ';z-index:2;display:flex;align-items:center;justify-content:flex-end;padding-right:2px">';
-        cellContent += '<div class="gantt-resize-handle" style="width:8px;height:100%;cursor:ew-resize;background:rgba(255,255,255,0.4);border-radius:0 4px 4px 0"></div>';
-        cellContent += '</div>';
-      }
-
-      if (d3 === dlIdx) {
-        var dlColor = isDone ? 'var(--green)' : isMeti ? 'var(--red)' : 'var(--gray5)';
-        cellContent += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:' + dlColor + ';z-index:3" title="' + esc(safeDate(task.deadline)) + '">◆</div>';
-      }
-
-      html += '<div style="width:' + DAY_W + 'px;flex-shrink:0;position:relative;background:' + cellBg + ';border-right:1px solid var(--gray1)">' + cellContent + '</div>';
+      html += '<div style="position:absolute;left:' + (d3 * DAY_W) + 'px;top:0;width:' + DAY_W + 'px;height:' + ROW_H + 'px;background:' + cellBg + ';border-right:1px solid var(--gray1)"></div>';
     }
 
-    html += '</div>';
+    // バー（barLen > 1 の場合）
+    if (barLen > 1) {
+      var barColor = isDone ? 'var(--green)' : isMeti ? 'var(--blue)' : 'var(--gray4)';
+      var barLeft = barStart * DAY_W + 2;
+      var barW    = barLen * DAY_W - 4;
+      html += '<div class="gantt-bar"'
+            + ' data-tid="' + tid + '"'
+            + ' data-start="' + workStart + '"'
+            + ' data-end="' + workEnd + '"'
+            + ' data-day-w="' + DAY_W + '"'
+            + ' data-days-before="' + DAYS_BEFORE + '"'
+            + ' style="position:absolute;left:' + barLeft + 'px;top:8px;width:' + barW + 'px;height:24px;'
+            + 'background:' + barColor + ';border-radius:4px;opacity:' + (isDone ? '0.5' : '0.8') + ';z-index:2;'
+            + 'display:flex;align-items:center;justify-content:flex-end;cursor:default;user-select:none">'
+            + '<div class="gantt-resize-handle" style="width:10px;height:100%;cursor:ew-resize;'
+            + 'background:rgba(255,255,255,0.5);border-radius:0 4px 4px 0;flex-shrink:0"></div>'
+            + '</div>';
+    }
+
+    // デッドラインマーカー
+    if (dlIdx >= 0 && dlIdx < totalDays) {
+      var dlColor = isDone ? 'var(--green)' : isMeti ? 'var(--red)' : 'var(--gray5)';
+      var dlLeft = dlIdx * DAY_W + DAY_W / 2;
+      html += '<div style="position:absolute;left:' + dlLeft + 'px;top:50%;transform:translate(-50%,-50%);'
+            + 'font-size:14px;color:' + dlColor + ';z-index:3;pointer-events:none" title="'
+            + esc(safeDate(task.deadline)) + '">◆</div>';
+    }
+
+    html += '</div>'; // グリッド領域
+    html += '</div>'; // 行
   }
 
   html += '<div style="display:flex;align-items:center;gap:16px;padding:10px 8px;font-size:11px;color:var(--gray5);border-top:1px solid var(--gray2);margin-top:4px;flex-wrap:wrap">';
-  html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--blue);border-radius:3px;opacity:0.7"></span>作業期間（METI）</span>';
-  html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--gray4);border-radius:3px;opacity:0.7"></span>作業期間</span>';
+  html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--blue);border-radius:3px;opacity:0.8"></span>作業期間（METI）</span>';
+  html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--gray4);border-radius:3px;opacity:0.8"></span>作業期間</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--red);font-size:14px">◆</span>デッドライン（METI）</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--gray5);font-size:14px">◆</span>デッドライン</span>';
   html += '<span style="color:var(--blue)">※バー右端をドラッグして作業期間を変更できます</span>';
@@ -1540,38 +1561,57 @@ function renderGantt(tasks, sessionDateStr) {
   html += '</div>';
 
   container.innerHTML = html;
-  initGanttDrag();
+  initGanttDrag(); // innerHTML確定後に呼ぶ
 }
 
 function initGanttDrag() {
-  var bars = document.querySelectorAll('.gantt-bar');
+  var bars = document.querySelectorAll('#gantt-container .gantt-bar');
   for (var i = 0; i < bars.length; i++) {
     (function(bar) {
       var handle = bar.querySelector('.gantt-resize-handle');
       if (!handle) return;
+
       handle.addEventListener('mousedown', function(e) {
         e.preventDefault();
-        var startX = e.clientX;
-        var origWidth = bar.offsetWidth;
-        var DAY_W = 28;
-        var workEnd = parseInt(bar.getAttribute('data-end'));
-        var workStart = parseInt(bar.getAttribute('data-start'));
-        var tid = bar.getAttribute('data-tid');
+        e.stopPropagation();
+
+        var DAY_W      = parseInt(bar.getAttribute('data-day-w'))    || 28;
+        var DAYS_BEFORE = parseInt(bar.getAttribute('data-days-before')) || 40;
+        var startX     = e.clientX;
+        var origWidth  = bar.offsetWidth; // この時点では描画済みなので正確な値が取れる
+        var workEnd    = parseInt(bar.getAttribute('data-end'));
+        var workStart  = parseInt(bar.getAttribute('data-start'));
+        var tid        = bar.getAttribute('data-tid');
+        var currentEnd = workEnd;
+
+        // ドラッグ中のスタイル
+        bar.style.opacity = '1';
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
 
         function onMove(ev) {
           var dx = ev.clientX - startX;
           var dayDelta = Math.round(dx / DAY_W);
-          var newWidth = Math.max(DAY_W, origWidth + dayDelta * DAY_W);
+          var newEnd = workEnd + dayDelta;
+          // 最低1日分（startより前にはできない）
+          if (newEnd < workStart) newEnd = workStart;
+          currentEnd = newEnd;
+
+          var newBarLen = (Math.max(workStart, newEnd) - Math.min(workStart, newEnd) + 1);
+          var newWidth = Math.max(DAY_W, newBarLen * DAY_W - 4);
           bar.style.width = newWidth + 'px';
-          bar.setAttribute('data-end', workEnd + dayDelta);
+          bar.setAttribute('data-end', newEnd);
         }
 
         function onUp() {
           document.removeEventListener('mousemove', onMove);
           document.removeEventListener('mouseup', onUp);
-          var newEnd = parseInt(bar.getAttribute('data-end'));
-          if (newEnd !== workEnd) {
-            saveGanttPeriod(tid, workStart, newEnd);
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          bar.style.opacity = bar.getAttribute('data-done') === 'true' ? '0.5' : '0.8';
+
+          if (currentEnd !== workEnd) {
+            saveGanttPeriod(tid, workStart, currentEnd);
           }
         }
 
