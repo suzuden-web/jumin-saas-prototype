@@ -524,7 +524,7 @@
                   <div class="loading"><div class="spinner"></div>読み込み中...</div>
                 </div>
               </div>
-              <div id="view-gantt" style="display:none;overflow-x:auto">
+              <div id="view-gantt" style="display:none;overflow-x:auto;position:relative">
                 <div id="gantt-container"></div>
               </div>
               <div id="view-calendar" style="display:none">
@@ -1451,7 +1451,7 @@ function renderGantt(tasks, sessionDateStr) {
   }
 
   var html = '<div style="position:relative;font-family:var(--sans)">';
-  html += '<div style="position:sticky;top:0;z-index:10;background:white">';
+html += '<div style="position:sticky;top:0;z-index:15;background:white">';
   html += '<div style="display:flex;margin-left:' + LABEL_W + 'px;border-bottom:1px solid var(--gray2)">';
   for (var mk2 in months) {
     var mo = months[mk2];
@@ -1460,7 +1460,7 @@ function renderGantt(tasks, sessionDateStr) {
   html += '</div>';
 
   html += '<div style="display:flex">';
-  html += '<div style="width:' + LABEL_W + 'px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--gray5);padding:4px 8px;border-bottom:1px solid var(--gray2);border-right:2px solid var(--gray3)">タスク</div>';
+html += '<div style="position:sticky;left:0;z-index:20;width:' + LABEL_W + 'px;min-width:' + LABEL_W + 'px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--gray5);padding:4px 8px;border-bottom:1px solid var(--gray2);border-right:2px solid var(--gray3);background:white">タスク</div>';
   for (var d2 = 0; d2 < totalDays; d2++) {
     var dt2 = new Date(startDate);
     dt2.setDate(dt2.getDate() + d2);
@@ -1508,7 +1508,7 @@ for (var i = 0; i < tasks.length; i++) {
     html += '<div style="display:flex;height:' + ROW_H + 'px;border-bottom:1px solid var(--gray1);background:' + rowBg + '">';
 
     // ラベル列
-    html += '<div style="width:' + LABEL_W + 'px;min-width:' + LABEL_W + 'px;flex-shrink:0;display:flex;align-items:center;padding:0 8px;border-right:2px solid var(--gray3);gap:4px">';
+html += '<div style="position:sticky;left:0;z-index:5;width:' + LABEL_W + 'px;min-width:' + LABEL_W + 'px;flex-shrink:0;display:flex;align-items:center;padding:0 8px;border-right:2px solid var(--gray3);gap:4px;background:inherit">';
     html += '<div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:' + (LABEL_W - 40) + 'px">' + esc(task.task_name || '') + '</div>';
     if (isMeti) html += '<span style="font-size:9px;background:var(--red-light);color:var(--red);padding:1px 4px;border-radius:3px;flex-shrink:0">METI</span>';
     html += '</div>';
