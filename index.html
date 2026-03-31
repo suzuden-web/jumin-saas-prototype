@@ -573,9 +573,10 @@
           <div class="ph"><div class="ph-title">ドキュメント出力</div><div class="ph-sub">初期設定済みのデータをもとに各フォーマットを自動生成します。</div></div>
           <div class="ib blue" id="output-guide"><div class="it">初期設定を完了してください</div>初期設定が完了すると出力ボタンが有効になります。</div>
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
-            <div class="card" style="cursor:pointer" onclick="exportSheet()">
-              <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#E3F9E5;color:#1B5E20;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">XLSX</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">A. スケジュール管理表</div><div style="font-size:12px;color:var(--gray5)">説明会日程から逆算した全タスクのマイルストーン管理シート</div></div>
-            </div>
+            <div class="card" style="cursor:pointer" onclick="exportGantt()">
+  <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#E3F9E5;color:#1B5E20;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">Google Sheets</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">A. スケジュール管理表（ガントチャート）</div><div style="font-size:12px;color:var(--gray5)">説明会日程を基準にした全タスクのガントチャート。作業期間・デッドライン・METI必須フラグを色分けして出力。</div></div>
+</div>
+
             <div class="card" style="cursor:pointer" onclick="exportSheet()">
               <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#E3F9E5;color:#1B5E20;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">XLSX</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">B. タスク管理・役割分担表</div><div style="font-size:12px;color:var(--gray5)">準備業務を役割別に整理した分担表</div></div>
             </div>
