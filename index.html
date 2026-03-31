@@ -1538,7 +1538,7 @@ for (var i = 0; i < tasks.length; i++) {
     if (barLen >= 1) {
       var barLeft = barStart * DAY_W + 2;
       var barW    = Math.max(DAY_W - 4, barLen * DAY_W - 4);
-      html += '<div class="gantt-bar"'
+html += '<div class="gantt-bar"'
             + ' data-tid="' + tid + '"'
             + ' data-start="' + workStart + '"'
             + ' data-end="' + workEnd + '"'
@@ -1547,12 +1547,13 @@ for (var i = 0; i < tasks.length; i++) {
             + ' data-done="' + isDone + '"'
             + ' style="position:absolute;left:' + barLeft + 'px;top:8px;width:' + barW + 'px;height:24px;'
             + 'background:' + barColor + ';border-radius:4px;opacity:' + barOpacity + ';z-index:3;'
-            + 'display:flex;align-items:center;justify-content:flex-end;cursor:default;user-select:none">'
+            + 'display:flex;align-items:center;justify-content:flex-start;cursor:default;user-select:none">'
+            // ★ ハンドルを左端に、border-radiusも左側に
             + '<div class="gantt-resize-handle"'
             + ' style="width:10px;height:100%;cursor:ew-resize;'
-            + 'background:rgba(255,255,255,0.5);border-radius:0 4px 4px 0;flex-shrink:0"></div>'
+            + 'background:rgba(255,255,255,0.5);border-radius:4px 0 0 4px;flex-shrink:0"></div>'
             + '</div>';
-    }
+                }
 
     // デッドラインマーカー
     if (dlIdx >= 0 && dlIdx < totalDays) {
@@ -1572,7 +1573,7 @@ for (var i = 0; i < tasks.length; i++) {
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--gray4);border-radius:3px;opacity:0.8"></span>作業期間</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--red);font-size:14px">◆</span>デッドライン（METI）</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--gray5);font-size:14px">◆</span>デッドライン</span>';
-  html += '<span style="color:var(--blue)">※バー右端をドラッグして作業期間を変更できます</span>';
+html += '<span style="color:var(--blue)">※バー左端をドラッグして作業開始日を変更できます</span>';
   html += '</div>';
   html += '</div>';
 
@@ -1591,48 +1592,56 @@ function initGanttDrag() {
         e.preventDefault();
         e.stopPropagation();
 
-        var DAY_W      = parseInt(bar.getAttribute('data-day-w'))    || 28;
+        var DAY_W       = parseInt(bar.getAttribute('data-day-w'))      || 28;
         var DAYS_BEFORE = parseInt(bar.getAttribute('data-days-before')) || 40;
-        var startX     = e.clientX;
-        var origWidth  = bar.offsetWidth; // この時点では描画済みなので正確な値が取れる
-        var workEnd    = parseInt(bar.getAttribute('data-end'));
-        var workStart  = parseInt(bar.getAttribute('data-start'));
-        var tid        = bar.getAttribute('data-tid');
-        var currentEnd = workEnd;
+        var startX      = e.clientX;
+        var workStart   = parseInt(bar.getAttribute('data-start'));
+        var workEnd     = parseInt(bar.getAttribute('data-end'));
+        var tid         = bar.getAttribute('data-tid');
+        var currentStart = workStart;
 
-        // ドラッグ中のスタイル
-        bar.style.opacity = '1';
-        document.body.style.cursor = 'ew-resize';
+        // バーの現在のleft値を取得
+        var origLeft  = parseInt(bar.style.left) || 0;
+        var origWidth = bar.offsetWidth;
+
+        document.body.style.cursor    = 'ew-resize';
         document.body.style.userSelect = 'none';
 
         function onMove(ev) {
           var dx = ev.clientX - startX;
           var dayDelta = Math.round(dx / DAY_W);
-          var newEnd = workEnd + dayDelta;
-          // 最低1日分（startより前にはできない）
-          if (newEnd < workStart) newEnd = workStart;
-          currentEnd = newEnd;
+          var newStart = workStart + dayDelta;
 
-          var newBarLen = (Math.max(workStart, newEnd) - Math.min(workStart, newEnd) + 1);
-          var newWidth = Math.max(DAY_W, newBarLen * DAY_W - 4);
+          // 終了日を超えて右にはいけない（最低1日分）
+          if (newStart > workEnd) newStart = workEnd;
+
+          currentStart = newStart;
+
+          // バーの左端位置と幅を更新
+          var newBarStart = Math.min(newStart, workEnd) + DAYS_BEFORE;
+          var newBarEnd   = Math.max(newStart, workEnd) + DAYS_BEFORE;
+          var newBarLen   = newBarEnd - newBarStart + 1;
+          var newLeft  = newBarStart * DAY_W + 2;
+          var newWidth = Math.max(DAY_W - 4, newBarLen * DAY_W - 4);
+
+          bar.style.left  = newLeft  + 'px';
           bar.style.width = newWidth + 'px';
-          bar.setAttribute('data-end', newEnd);
+          bar.setAttribute('data-start', newStart);
         }
 
         function onUp() {
           document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
-          document.body.style.cursor = '';
+          document.removeEventListener('mouseup',   onUp);
+          document.body.style.cursor    = '';
           document.body.style.userSelect = '';
-          bar.style.opacity = bar.getAttribute('data-done') === 'true' ? '0.5' : '0.8';
 
-          if (currentEnd !== workEnd) {
-            saveGanttPeriod(tid, workStart, currentEnd);
+          if (currentStart !== workStart) {
+            saveGanttPeriod(tid, currentStart, workEnd);
           }
         }
 
         document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
+        document.addEventListener('mouseup',   onUp);
       });
     })(bars[i]);
   }
