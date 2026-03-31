@@ -1890,6 +1890,22 @@ function saveGanttPeriod(taskId, workStart, workEnd) {
       });
   }
 
+function exportGantt() {
+    if (!state.currentPlantId) {
+      showToast('プロジェクトが選択されていません', 'error');
+      return;
+    }
+    showToast('ガントチャートを生成中...（しばらくお待ちください）', 'success');
+    callGAS('exportGanttToSheet', { plantId: state.currentPlantId })
+      .then(function(result) {
+        window.open(result.url, '_blank');
+        showToast('ガントチャートをGoogle Sheetsで開きました', 'success');
+      })
+      .catch(function(err) {
+        showToast('生成に失敗しました: ' + (err.message || ''), 'error');
+      });
+  }
+  
   // ══════════════════════════════════════════════════════════════
   // 説明会資料入力 — クラスター定義 & 描画
   // ══════════════════════════════════════════════════════════════
