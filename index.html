@@ -1490,9 +1490,12 @@ for (var i = 0; i < tasks.length; i++) {
 
     var workStart = (task.work_start_offset !== undefined && task.work_start_offset !== '')
       ? parseInt(task.work_start_offset) : offset;
-    var workEnd = (task.work_end_offset !== undefined && task.work_end_offset !== '')
-      ? parseInt(task.work_end_offset)
-      : (task.rangeEnd !== null && task.rangeEnd !== undefined ? parseInt(task.rangeEnd) : offset);
+   var workEnd = offset; // デフォルト
+    if (task.work_end_offset !== undefined && task.work_end_offset !== '' && !isNaN(parseInt(task.work_end_offset))) {
+      workEnd = parseInt(task.work_end_offset);
+    } else if (task.rangeEnd !== undefined && task.rangeEnd !== null && task.rangeEnd !== '' && !isNaN(parseInt(task.rangeEnd))) {
+      workEnd = parseInt(task.rangeEnd);
+    }
 
     var dlIdx    = offset + DAYS_BEFORE;
     // ★ barStart/barEnd はグリッド内インデックス（0〜totalDays-1）
