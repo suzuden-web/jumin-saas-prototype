@@ -587,6 +587,12 @@
             <div class="card" style="cursor:pointer" onclick="exportFlyer()">
               <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#FFE4E4;color:#8B0000;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">PDF</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">D. 住民説明会 案内チラシ</div><div style="font-size:12px;color:var(--gray5)">METI必須記載事項を全て含む案内チラシ（Google Docs形式）</div></div>
             </div>
+            <div class="card" style="cursor:pointer" onclick="exportAppendix1()">
+              <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#F3E8FF;color:#6B21A8;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">Google Docs</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">E. 付録1：自治体相談様式</div><div style="font-size:12px;color:var(--gray5)">「周辺地域の住民」の範囲について市町村に事前相談する際の様式（GL付録1準拠）。事業者情報・発電所情報を自動差し込み。</div></div>
+            </div>
+            <div class="card" style="cursor:pointer" onclick="exportAppendix2()">
+              <div class="cb"><div style="font-size:10px;font-family:var(--mono);background:#F3E8FF;color:#6B21A8;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:12px">Google Docs</div><div style="font-size:15px;font-weight:700;margin-bottom:5px">F. 付録2：自治体意見様式</div><div style="font-size:12px;color:var(--gray5)">市町村が事業者に対して「周辺地域の住民」の範囲について意見を回答する様式（GL付録2準拠）。申請者名を自動差し込み。</div></div>
+            </div>
           </div>
         </div>
 
@@ -1914,6 +1920,38 @@ function exportGantt() {
         showToast('生成に失敗しました: ' + (err.message || ''), 'error');
       });
   }
+  function exportAppendix1() {
+    if (!state.currentPlantId) {
+      showToast('プロジェクトが選択されていません', 'error');
+      return;
+    }
+    showToast('付録1（自治体相談様式）を生成中...', 'success');
+    callGAS('generateAppendix1', { plantId: state.currentPlantId })
+      .then(function(result) {
+        window.open(result.url, '_blank');
+        showToast('付録1をGoogle Docsで開きました', 'success');
+      })
+      .catch(function(err) {
+        showToast('生成に失敗しました: ' + (err.message || ''), 'error');
+      });
+  }
+
+  function exportAppendix2() {
+    if (!state.currentPlantId) {
+      showToast('プロジェクトが選択されていません', 'error');
+      return;
+    }
+    showToast('付録2（自治体意見様式）を生成中...', 'success');
+    callGAS('generateAppendix2', { plantId: state.currentPlantId })
+      .then(function(result) {
+        window.open(result.url, '_blank');
+        showToast('付録2をGoogle Docsで開きました', 'success');
+      })
+      .catch(function(err) {
+        showToast('生成に失敗しました: ' + (err.message || ''), 'error');
+      });
+  }
+  
   
   function deleteCurrentProject() {
     if (!state.currentPlantId) {
