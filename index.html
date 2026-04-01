@@ -198,6 +198,55 @@
   .cal-ev.meti{background:var(--red-light);color:var(--red)}
   .cal-ev.normal{background:var(--blue-light);color:var(--blue)}
   .cal-ev.done{background:var(--green-light);color:var(--green);text-decoration:line-through}
+  /* ══ METIチェック v4.0 severity UI ═══════════════════════════ */
+
+  /* 行ベース */
+  .meti-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:6px;border:1px solid transparent;margin-bottom:6px}
+  .meti-ic{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+  .meti-body{flex:1;min-width:0}
+  .meti-header{display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap}
+  .meti-rule{font-size:10px;font-family:var(--mono);color:var(--gray5);background:var(--gray1);padding:1px 6px;border-radius:3px}
+  .meti-msg{font-size:13px;color:var(--text);line-height:1.55}
+  .meti-gl{margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+  /* GL出典リンク */
+  .gl-link{font-size:11px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border:1px solid rgba(26,86,219,.2);border-radius:4px;background:var(--blue-light);transition:background .15s}
+  .gl-link:hover{background:#dbeafe;text-decoration:underline}
+  .gl-ref{font-size:11px;color:var(--gray5);font-family:var(--mono)}
+
+  /* BLOCK — 要対応（赤） */
+  .sev-block{background:var(--red-light);border-color:#FCA5A5}
+  .sev-block .meti-ic{background:var(--red);color:white}
+
+  /* CHECK — 要確認（アンバー） */
+  .sev-check{background:var(--amber-light);border-color:#FCD34D}
+  .sev-check .meti-ic{background:var(--amber);color:white}
+
+  /* INFO — 参考情報（ブルー） */
+  .sev-info{background:var(--blue-light);border-color:#93C5FD}
+  .sev-info .meti-ic{background:var(--blue);color:white}
+
+  /* OK — 適合（グリーン） */
+  .sev-ok{background:var(--green-light);border-color:#6EE7B7}
+  .sev-ok .meti-ic{background:var(--green);color:white}
+
+  /* バッジ */
+  .meti-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+  .sev-badge-BLOCK{background:var(--red-light);color:var(--red)}
+  .sev-badge-CHECK{background:var(--amber-light);color:var(--amber)}
+  .sev-badge-INFO{background:var(--blue-light);color:var(--blue)}
+  .sev-badge-OK{background:var(--green-light);color:var(--green)}
+
+  /* セクションヘッダー */
+  .meti-sec-header{font-size:11px;font-weight:600;color:var(--gray5);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:6px}
+  .meti-sec-count{background:var(--gray1);color:var(--gray6);padding:0 6px;border-radius:8px;font-size:10px}
+
+  /* 凡例 */
+  .meti-legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:10px;background:var(--gray1);border-radius:var(--radius)}
+  .leg-item{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:500}
+
+  /* サマリーカードラベル変更（compliance画面）*/
+  /* c-error → 要対応, c-warn → 要確認, c-ok → 適合+参考 */
   </style>
   </head>
   <body>
@@ -476,7 +525,7 @@
             <div class="cb" style="padding:0"><table class="dt"><tbody id="confirm-session"></tbody></table></div>
           </div>
           <div class="card">
-            <div class="ch"><div class="ct">METI準拠チェック結果（全9ルール）</div></div>
+            <div class="ch"><div class="ct">METI準拠チェック結果（全17ルール＋SYS3件</div></div>
             <div class="cb"><div class="cl" id="confirm-meti"></div></div>
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:8px">
@@ -489,9 +538,9 @@
         <div class="screen" id="screen-compliance">
           <div class="ph"><div class="ph-title">METI準拠チェック</div><div class="ph-sub">入力済みデータを「説明会及び事前周知措置実施ガイドライン」（2024年2月策定・2026年4月改訂　資源エネルギー庁）に照合した結果です。全17ルール＋システムバリデーション3件をチェックします。</div></div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-            <div class="sc" style="border-color:var(--red)"><div class="sc-lbl">ERROR</div><div class="sc-val" id="c-error" style="color:var(--red)">--</div><div class="sc-sub">出力ブロック</div></div>
-            <div class="sc" style="border-color:var(--amber)"><div class="sc-lbl">WARNING</div><div class="sc-val" id="c-warn" style="color:var(--amber)">--</div><div class="sc-sub">要確認</div></div>
-            <div class="sc" style="border-color:var(--green)"><div class="sc-lbl">OK</div><div class="sc-val" id="c-ok" style="color:var(--green)">--</div><div class="sc-sub">適合</div></div>
+            <div class="sc" style="border-color:var(--red)"><div class="sc-lbl">要対応</div><div class="sc-val" id="c-error" style="color:var(--red)">--</div><div class="sc-sub">申請ブロック要因の可能性</div></div>
+            <div class="sc" style="border-color:var(--amber)"><div class="sc-lbl">要確認</div><div class="sc-val" id="c-warn" style="color:var(--amber)">--</div><div class="sc-sub">担当者が判断すべき項目</div></div>
+            <div class="sc" style="border-color:var(--green)"><div class="sc-lbl">適合 / 参考</div><div class="sc-val" id="c-ok" style="color:var(--green)">--</div><div class="sc-sub">基準適合 + 参考情報</div></div>
           </div>
           <div class="card">
             <div class="ch"><div class="ct">チェック結果詳細</div><button class="btn btn-o" style="font-size:11px;padding:4px 10px" onclick="runMetiCheck()">再チェック</button></div>
@@ -1002,34 +1051,87 @@ for (var i = 0; i < inputs.length; i++) {
   // ══════════════════════════════════════════════════════════════
   // METIチェック
   // ══════════════════════════════════════════════════════════════
-  function runMetiCheck() {
-    var plantData = state.plant || {};
-    var sessionData = state.session || {};
-  callGAS('runMetiCheck', { plant: plantData, session: sessionData, plantId: state.currentPlantId || '' })
-      .then(function(results) {
-        state.metiResults = results;
-        renderMetiResults(results);
-      })
-      .catch(function(err) {
-        console.log('runMetiCheck error: ' + err);
-      });
-  }
+  // ══════════════════════════════════════════════════════════════
+  // METIチェック結果描画 v4.0
+  // severity: BLOCK / CHECK / INFO / OK
+  // 表示ラベル: 要対応 / 要確認 / 参考情報 / 適合
+  // ══════════════════════════════════════════════════════════════
+
+  // severity → UI定義マップ
+  var SEVERITY_MAP = {
+    BLOCK: {
+      label: '要対応',
+      labelEn: 'BLOCK',
+      cls: 'sev-block',
+      ic: '✕',
+      desc: '申請ブロック要因になる可能性が高い項目'
+    },
+    CHECK: {
+      label: '要確認',
+      labelEn: 'CHECK',
+      cls: 'sev-check',
+      ic: '！',
+      desc: '担当者が判断すべき項目'
+    },
+    INFO: {
+      label: '参考情報',
+      labelEn: 'INFO',
+      cls: 'sev-info',
+      ic: 'i',
+      desc: '実務上確認が推奨される項目'
+    },
+    OK: {
+      label: '適合',
+      labelEn: 'OK',
+      cls: 'sev-ok',
+      ic: '✓',
+      desc: '入力データが基準を満たしている項目'
+    }
+  };
 
   function renderMetiResults(results) {
-    var errors = 0, warns = 0, oks = 0, infos = 0;
+    var blocks = 0, checks = 0, infos = 0, oks = 0;
     var htmlMeti = '';
-    var htmlSys = '';
+    var htmlSys  = '';
+
     for (var i = 0; i < results.length; i++) {
       var r = results[i];
-      if (r.severity === 'ERROR') errors++;
-      else if (r.severity === 'WARNING') warns++;
+      var sv = SEVERITY_MAP[r.severity] || SEVERITY_MAP['INFO'];
+
+      if (r.severity === 'BLOCK') blocks++;
+      else if (r.severity === 'CHECK') checks++;
       else if (r.severity === 'INFO') infos++;
       else oks++;
-      var cls = r.severity === 'ERROR' ? 'err' : r.severity === 'WARNING' ? 'wrn' : r.severity === 'INFO' ? 'info' : 'ok';
-      var ic = r.severity === 'ERROR' ? '&#10007;' : r.severity === 'WARNING' ? '!' : r.severity === 'INFO' ? 'i' : '&#10003;';
-      var tag = r.severity === 'ERROR' ? 't-r' : r.severity === 'WARNING' ? 't-a' : r.severity === 'INFO' ? 't-b' : 't-g';
-      var ref = r.reference ? '<div style="font-size:10px;color:var(--gray4);margin-top:2px">根拠：' + esc(r.reference) + '</div>' : '';
-      var row = '<div class="ci ' + cls + '"><div class="ci-ic">' + ic + '</div><div style="flex:1"><div class="ci-txt">' + esc(r.message) + '</div><div class="ci-rule">' + esc(r.rule_id) + '</div>' + ref + '</div><span class="tag ' + tag + '">' + esc(r.severity) + '</span></div>';
+
+      // GL出典リンク（gl_chapterがある場合のみ）
+      var glLink = '';
+      if (r.gl_chapter) {
+        if (r.gl_url) {
+          glLink = '<a href="' + esc(r.gl_url) + '" target="_blank" rel="noopener" class="gl-link">'
+                 + '出典：' + esc(r.gl_chapter) + ' ↗'
+                 + '</a>';
+        } else {
+          glLink = '<span class="gl-ref">出典：' + esc(r.gl_chapter) + '</span>';
+        }
+      }
+      if (r.reference && r.gl_chapter) {
+        glLink += '<span class="gl-ref">/ ' + esc(r.reference) + '</span>';
+      } else if (r.reference && !r.gl_chapter) {
+        glLink += '<span class="gl-ref">' + esc(r.reference) + '</span>';
+      }
+
+      var row = '<div class="meti-row ' + sv.cls + '">'
+              + '<div class="meti-ic">' + sv.ic + '</div>'
+              + '<div class="meti-body">'
+              + '<div class="meti-header">'
+              + '<span class="meti-rule">' + esc(r.rule_id) + '</span>'
+              + '<span class="meti-badge sev-badge-' + r.severity + '">' + sv.label + '</span>'
+              + '</div>'
+              + '<div class="meti-msg">' + esc(r.message) + '</div>'
+              + (glLink ? '<div class="meti-gl">' + glLink + '</div>' : '')
+              + '</div>'
+              + '</div>';
+
       if (r.category === 'SYS') {
         htmlSys += row;
       } else {
@@ -1037,43 +1139,61 @@ for (var i = 0; i < inputs.length; i++) {
       }
     }
 
-    var fullHtml = '';
-    if (htmlMeti) {
-      fullHtml += '<div style="font-size:12px;font-weight:600;color:var(--gray5);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--gray2)">METIガイドライン準拠チェック（GL 2024年2月策定・2025年4月改訂）</div>';
-      fullHtml += htmlMeti;
-    }
-    if (htmlSys) {
-      fullHtml += '<div style="font-size:12px;font-weight:600;color:var(--gray5);margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--gray2)">システムバリデーション</div>';
-      fullHtml += htmlSys;
-    }
-
-    var cl = document.getElementById('compliance-list');
-    if (cl) cl.innerHTML = fullHtml;
+    // サマリー数値を更新
     var ce = document.getElementById('c-error');
     var cw = document.getElementById('c-warn');
     var co = document.getElementById('c-ok');
-    if (ce) ce.textContent = errors;
-    if (cw) cw.textContent = warns;
+    if (ce) ce.textContent = blocks;
+    if (cw) cw.textContent = checks;
     if (co) co.textContent = (oks + infos);
 
-    var pill = document.getElementById('meti-pill');
+    // ピル更新
+    var pill     = document.getElementById('meti-pill');
     var statusEl = document.getElementById('meti-status');
-    var score = document.getElementById('meti-score');
-    var detail = document.getElementById('meti-detail');
-    if (errors > 0) {
+    var score    = document.getElementById('meti-score');
+    var detail   = document.getElementById('meti-detail');
+    if (blocks > 0) {
       pill.className = 'cp-pill err';
-      if (statusEl) statusEl.textContent = 'METI：エラー' + errors + '件';
-      if (score) { score.textContent = 'ERROR ' + errors; score.style.color = 'var(--red)'; }
-    } else if (warns > 0) {
+      if (statusEl) statusEl.textContent = 'METI：要対応 ' + blocks + '件';
+      if (score) { score.textContent = '要対応 ' + blocks; score.style.color = 'var(--red)'; }
+    } else if (checks > 0) {
       pill.className = 'cp-pill warn';
-      if (statusEl) statusEl.textContent = 'METI準拠：警告' + warns + '件';
-      if (score) { score.textContent = '警告 ' + warns; score.style.color = 'var(--amber)'; }
+      if (statusEl) statusEl.textContent = 'METI：要確認 ' + checks + '件';
+      if (score) { score.textContent = '要確認 ' + checks; score.style.color = 'var(--amber)'; }
     } else {
       pill.className = 'cp-pill ok';
       if (statusEl) statusEl.textContent = 'METI準拠：適合';
       if (score) { score.textContent = '適合'; score.style.color = 'var(--green)'; }
     }
-    if (detail) detail.textContent = 'ERROR:' + errors + ' WARNING:' + warns + ' INFO:' + infos + ' OK:' + oks;
+    if (detail) detail.textContent = '要対応:' + blocks + ' 要確認:' + checks + ' 参考情報:' + infos + ' 適合:' + oks;
+
+    // 詳細リスト組み立て
+    var sectionHeader = function(label, count) {
+      return '<div class="meti-sec-header">' + esc(label) + '<span class="meti-sec-count">' + count + '</span></div>';
+    };
+
+    var fullHtml = '';
+
+    // GLセクション（グルーピング）
+    if (htmlMeti) {
+      if (blocks > 0 || checks > 0) {
+        fullHtml += '<div class="meti-legend">'
+                  + '<span class="leg-item sev-badge-BLOCK">要対応：申請ブロック要因になる可能性が高い項目</span>'
+                  + '<span class="leg-item sev-badge-CHECK">要確認：担当者が判断すべき項目</span>'
+                  + '<span class="leg-item sev-badge-INFO">参考情報：実務上確認が推奨される項目</span>'
+                  + '<span class="leg-item sev-badge-OK">適合：基準を満たしている項目</span>'
+                  + '</div>';
+      }
+      fullHtml += '<div class="meti-sec-header">METIガイドライン準拠チェック（GL 2024年2月策定・2026年4月改訂）</div>';
+      fullHtml += htmlMeti;
+    }
+    if (htmlSys) {
+      fullHtml += '<div class="meti-sec-header" style="margin-top:12px">システムバリデーション</div>';
+      fullHtml += htmlSys;
+    }
+
+    var cl = document.getElementById('compliance-list');
+    if (cl) cl.innerHTML = fullHtml;
 
     var cm = document.getElementById('confirm-meti');
     if (cm) cm.innerHTML = fullHtml;
@@ -1951,7 +2071,7 @@ function exportGantt() {
         showToast('生成に失敗しました: ' + (err.message || ''), 'error');
       });
   }
-  
+
   
   function deleteCurrentProject() {
     if (!state.currentPlantId) {
