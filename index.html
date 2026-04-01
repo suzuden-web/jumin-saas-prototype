@@ -969,10 +969,11 @@ for (var i = 0; i < inputs.length; i++) {
 
     renderTaskList(tasks.slice(0, 5));
 
-    if (state.plant && state.session) {
-     callGAS('runMetiCheck', { plantId: state.currentPlantId });
-    }
+   if (state.plant && state.session) {
+    runMetiCheck(); // 新しく作った関数を呼び出す形に変更
   }
+}
+
 
   // ── フォーム復元関数 ────────────────────────────
   function restoreOperatorForm(op) {
@@ -1088,6 +1089,28 @@ for (var i = 0; i < inputs.length; i++) {
       desc: '入力データが基準を満たしている項目'
     }
   };
+
+// ══════════════════════════════════════════════════════════════
+// METIチェック実行（フロント側呼び出し用）
+// ══════════════════════════════════════════════════════════════
+function runMetiCheck() {
+  if (!state.currentPlantId) return; // プロジェクト未選択時は実行しない
+
+  // 画面のリスト部分をローディング表示にする
+  var cl = document.getElementById('compliance-list');
+  if (cl) cl.innerHTML = '<div class="loading"><div class="spinner"></div>チェック実行中...</div>';
+
+  // 裏側（Code.gs）の runMetiCheck を呼び出す
+  callGAS('runMetiCheck', { plantId: state.currentPlantId })
+    .then(function(results) {
+      // 成功したら、すでに実装されている結果描画関数にデータを渡す
+      renderMetiResults(results);
+    })
+    .catch(function(err) {
+      console.error('METIチェックエラー:', err);
+      if (cl) cl.innerHTML = '<div style="color:var(--red);padding:20px;">チェック処理に失敗しました。</div>';
+    });
+}
 
   function renderMetiResults(results) {
     var blocks = 0, checks = 0, infos = 0, oks = 0;
