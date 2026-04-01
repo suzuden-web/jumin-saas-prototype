@@ -1909,6 +1909,36 @@ function exportGantt() {
       });
   }
   
+  function deleteCurrentProject() {
+    if (!state.currentPlantId) {
+      showToast('削除するプロジェクトが選択されていません', 'error');
+      return;
+    }
+    var plantName = state.plant ? (state.plant.plant_name || 'このプロジェクト') : 'このプロジェクト';
+    if (!confirm('「' + plantName + '」を削除します。\nタスク・セッション・スライドデータも全て削除されます。\n\nこの操作は取り消せません。本当に削除しますか？')) {
+      return;
+    }
+    showToast('削除中...', 'success');
+    callGAS('deleteProject', { plantId: state.currentPlantId })
+      .then(function() {
+        showToast('プロジェクトを削除しました', 'success');
+        state.currentPlantId = null;
+        state.operator = null;
+        state.plant = null;
+        state.session = null;
+        state.tasks = [];
+        state.metiResults = [];
+        loadProjectList();
+        var items = document.querySelectorAll('.nav-item');
+        for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
+        items[0].classList.add('active');
+        goScreen('dashboard');
+      })
+      .catch(function(err) {
+        showToast('削除に失敗しました: ' + (err.message || ''), 'error');
+      });
+  }
+  
   // ══════════════════════════════════════════════════════════════
   // 説明会資料入力 — クラスター定義 & 描画
   // ══════════════════════════════════════════════════════════════
