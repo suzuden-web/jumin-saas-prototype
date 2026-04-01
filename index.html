@@ -1429,6 +1429,7 @@ function switchView(mode) {
 var ganttDragState = null;
 
 function renderGantt(tasks, sessionDateStr) {
+  console.log('renderGantt called', tasks.length, sessionDateStr);
   var container = document.getElementById('gantt-container');
   var T = new Date(sessionDateStr);
   T.setHours(0, 0, 0, 0);
