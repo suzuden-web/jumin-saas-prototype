@@ -970,7 +970,7 @@ for (var i = 0; i < inputs.length; i++) {
     renderTaskList(tasks.slice(0, 5));
 
     if (state.plant && state.session) {
-     callGAS('runMetiCheck', { plantId: currentPlantId });
+     callGAS('runMetiCheck', { plantId: state.currentPlantId });
     }
   }
 
