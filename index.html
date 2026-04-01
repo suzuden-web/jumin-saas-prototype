@@ -1541,6 +1541,7 @@ html += '<div style="position:sticky;left:0;z-index:5;width:' + LABEL_W + 'px;mi
 
     // ★ バー（barLen >= 1 で必ず描画）
     if (barLen >= 1) {
+      console.log('bar', i, 'barStart:'+barStart, 'barLen:'+barLen, 'workStart:'+workStart, 'workEnd:'+workEnd);
       var barLeft = barStart * DAY_W + 2;
       var barW    = Math.max(DAY_W - 4, barLen * DAY_W - 4);
 html += '<div class="gantt-bar"'
