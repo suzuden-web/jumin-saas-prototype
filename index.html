@@ -1502,6 +1502,7 @@ for (var i = 0; i < tasks.length; i++) {
     barStart = Math.max(0, Math.min(barStart, totalDays - 1));
     barEnd   = Math.max(0, Math.min(barEnd,   totalDays - 1));
     var barLen = barEnd - barStart + 1;
+    console.log('task', i, 'offset:'+offset, 'workStart:'+workStart, 'workEnd:'+workEnd, 'barStart:'+barStart, 'barEnd:'+barEnd, 'barLen:'+barLen);
 
     var rowBg = isDone ? '#F0FDF4' : (i % 2 === 0 ? 'white' : 'var(--gray0)');
     var tid = esc(task.task_id || '');
