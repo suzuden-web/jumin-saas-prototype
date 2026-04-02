@@ -692,21 +692,59 @@
   // ══════════════════════════════════════════════════════════════
   var GAS_URL = 'https://script.google.com/a/macros/suzuden-hd.co.jp/s/AKfycbyxJCeyiWXVA_TaoCSdYapEBQegAbGdSRUF2ufcdowMFhFlp5vKxyL0Ipv1vUqtJc9s/exec';
 
-  function callGAS(action, data) {
-    return fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: action, data: data || {} })
-    })
-    .then(function(response) {
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      return response.json();
-    })
-    .then(function(result) {
-      if (result && result.error) throw new Error(result.error);
-      return result;
-    });
-  }
+ // ── アクション→日本語名＋関連情報マップ ──────────────
+var ACTION_MAP = {
+  'saveOperator':     { label: '事業者情報の保存',       fn: 'saveOperator()',       sheets: '事業者情報' },
+  'savePlant':        { label: '発電所情報の保存',       fn: 'savePlant()',          sheets: '発電所情報' },
+  'saveSession':      { label: '説明会セッションの保存', fn: 'saveSession()',        sheets: '説明会セッション, タスク管理' },
+  'getAllData':       { label: '全データ取得',           fn: 'getAllData()',          sheets: '全シート' },
+  'getProjectList':   { label: 'プロジェクト一覧取得',   fn: 'getProjectList()',     sheets: '発電所情報' },
+  'getProjectData':   { label: 'プロジェクトデータ取得', fn: 'getProjectData()',     sheets: '全シート(plant_idフィルタ)' },
+  'runMetiCheck':     { label: 'METIチェック',           fn: 'runMetiCheck()',       sheets: '発電所情報, 事業者情報, 説明会セッション' },
+  'updateTaskField':  { label: 'タスク更新',             fn: 'updateTaskField()',    sheets: 'タスク管理' },
+  'updateTaskPeriod': { label: 'タスク期間更新',         fn: 'updateTaskPeriod()',   sheets: 'タスク管理' },
+  'generateFlyer':    { label: '案内チラシ生成',         fn: 'generateFlyer()',      sheets: '発電所情報, 説明会セッション, 事業者情報' },
+  'generateSlides':   { label: '説明会資料生成',         fn: 'generateSlides()',     sheets: '発電所情報, 説明会セッション, 事業者情報, スライド入力データ' },
+  'generateAppendix1':{ label: '付録1生成',              fn: 'generateAppendix1()',  sheets: '発電所情報, 説明会セッション, 事業者情報' },
+  'generateAppendix2':{ label: '付録2生成',              fn: 'generateAppendix2()',  sheets: '発電所情報, 事業者情報' },
+  'exportGanttToSheet':{ label: 'ガントチャート出力',    fn: 'exportGanttToSheet()', sheets: 'タスク管理, 説明会セッション, 発電所情報' },
+  'saveSlideData':    { label: 'スライドデータ保存',     fn: 'saveSlideData()',      sheets: 'スライド入力データ' },
+  'loadSlideData':    { label: 'スライドデータ読込',     fn: 'loadSlideData()',      sheets: 'スライド入力データ' },
+  'importFromPdf':    { label: 'PDF読み取り',            fn: 'importFromPdf()',      sheets: 'なし(Drive API)' },
+  'getPdfList':       { label: 'PDF一覧取得',            fn: 'getPdfList()',         sheets: 'なし(Drive API)' },
+  'deleteProject':    { label: 'プロジェクト削除',       fn: 'deleteProject()',      sheets: '発電所情報, 説明会セッション, タスク管理, スライド入力データ' },
+  'saveDraft':        { label: '下書き保存',             fn: 'saveDraft()',          sheets: 'なし(UserProperties)' },
+  'loadDraft':        { label: '下書き読込',             fn: 'loadDraft()',          sheets: 'なし(UserProperties)' },
+  'getUserEmail':     { label: 'ユーザーメール取得',     fn: 'getUserEmail()',       sheets: 'なし' },
+  'getSpreadsheetId': { label: 'スプレッドシートID取得', fn: 'getSpreadsheetId()',   sheets: 'なし' }
+};
+
+function callGAS(action, data) {
+  var info = ACTION_MAP[action] || { label: action, fn: action, sheets: '不明' };
+
+  return fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: action, data: data || {} })
+  })
+  .then(function(response) {
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return response.json();
+  })
+  .then(function(result) {
+    if (result && result.error) throw new Error(result.error);
+    return result;
+  })
+  .catch(function(err) {
+    var msg = '【' + info.label + '】でエラーが発生しました\n' +
+              '対象関数: ' + info.fn + '\n' +
+              '依存シート: ' + info.sheets + '\n' +
+              '詳細: ' + err.message;
+    console.error(msg);
+    console.error('送信データ:', JSON.stringify(data || {}));
+    throw new Error(msg);
+  });
+}
 
   // ── XSSエスケープ ────────────────────────────────
   function esc(str) {
