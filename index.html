@@ -1959,6 +1959,7 @@ function saveGanttPeriod(taskId, workStart, workEnd) {
   }
 function renderScheduleTable(tasks) {
   console.log('tasks[0]:', JSON.stringify(tasks[0]));
+  console.log('posting task:', JSON.stringify(tasks.find(function(t){ return t.task_name === '開催案内ポスティング（住民宛）'; })));
     var catClass = { '事前相談': 't-b', '通知': 't-a', '資料': 't-g', '開催': 't-b', '申請': 't-gr' };
     var today = new Date();
     today.setHours(0, 0, 0, 0);
