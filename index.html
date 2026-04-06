@@ -1983,9 +1983,6 @@ function renderScheduleTable(tasks) {
         else if (ddiff <= 7 && t.status !== '完了') deadlineStyle = 'color:var(--amber);font-weight:600';
       }
 
-      // 🌟 追加：実施日の処理（日付入力フォーム用にフォーマットを整えます）
-      var actualDateVal = t.actual_date ? t.actual_date.split('T')[0] : '';
-
       var metiMark = isMeti ? ' <span style="color:var(--red);font-size:10px">&#9733;METI</span>' : '';
       var noStr = String(i + 1);
       while (noStr.length < 2) noStr = '0' + noStr;
@@ -2003,13 +2000,7 @@ function renderScheduleTable(tasks) {
       html += '<td>' + taskName + metiMark + '</td>';
       
       // ① 担当者
-      html += '<td><input style="border:1px solid var(--gray2);border-radius:4px;padding:3px 6px;font-size:12px;width:80px" value="' + assignee + '" placeholder="担当者" data-tid="' + tid + '" onchange="updateAssignee(this.getAttribute(\'data-tid\'), this.value)"></td>';
-      html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateVal + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
-      
-      // 🌟 ② 追加：実施日（日付入力用の input type="date"）
-      html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateVal + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
-      
-      // ③ 期限日
+     html += '<td><input style="border:1px solid var(--gray2);border-radius:4px;padding:3px 6px;font-size:12px;width:80px" value="' + assignee + '" placeholder="担当者" data-tid="' + tid + '" onchange="updateAssignee(this.getAttribute(\'data-tid\'), this.value)"></td>';
       html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateVal + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
       html += '<td style="' + deadlineStyle + '">' + esc(deadlineStr) + '</td>';
       
