@@ -2003,7 +2003,12 @@ function renderScheduleTable(tasks) {
       // ① 担当者
      html += '<td><input style="border:1px solid var(--gray2);border-radius:4px;padding:3px 6px;font-size:12px;width:80px" value="' + assignee + '" placeholder="担当者" data-tid="' + tid + '" onchange="updateAssignee(this.getAttribute(\'data-tid\'), this.value)"></td>';
       html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateVal + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
-      html += '<td style="' + deadlineStyle + '">' + esc(deadlineStr) + '</td>';
+      var isPosting = t.task_name === '開催案内ポスティング（住民宛）';
+      if (isPosting) {
+        html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px;' + deadlineStyle + '" value="' + (deadlineStr === '--' ? '' : deadlineStr) + '" data-tid="' + tid + '" onchange="updateDeadlineAndNotice(this.getAttribute(\'data-tid\'), this.value)"></td>';
+      } else {
+        html += '<td style="' + deadlineStyle + '">' + esc(deadlineStr) + '</td>';
+      }
       
       html += '<td style="font-family:var(--mono);font-size:12px">' + esc(tLabel) + '</td>';
       html += '<td style="font-size:11px;color:var(--gray5)">' + notes + '</td>';
@@ -2036,9 +2041,10 @@ function renderScheduleTable(tasks) {
     }
   }
 
-  function updateActualDate(taskId, val) {
-  callGAS('updateTaskField', { task_id: taskId, field: 'actual_date', value: val })
-    .catch(function(err) { showToast('実施日の保存に失敗しました', 'error'); });
+  function updateDeadlineAndNotice(taskId, value) {
+    callGAS('updateTaskField', { taskId: taskId, field: 'deadline', value: value })
+      .then(function() { showToast('配布予定日を更新しました', 'success'); })
+      .catch(function() { showToast('更新に失敗しました', 'error'); });
   }
 
   // 🌟 追加：実施日を裏側に保存するための新しい関数
