@@ -2004,10 +2004,10 @@ function renderScheduleTable(tasks) {
       
       // ① 担当者
       html += '<td><input style="border:1px solid var(--gray2);border-radius:4px;padding:3px 6px;font-size:12px;width:80px" value="' + assignee + '" placeholder="担当者" data-tid="' + tid + '" onchange="updateAssignee(this.getAttribute(\'data-tid\'), this.value)"></td>';
-      html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateStr + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
+      html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateVal + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
       
       // 🌟 ② 追加：実施日（日付入力用の input type="date"）
-      html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateStr + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
+      html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateVal + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
       
       // ③ 期限日
       html += '<td><input type="date" style="border:1px solid var(--gray2);border-radius:4px;padding:3px;font-size:12px;width:110px" value="' + actualDateVal + '" data-tid="' + tid + '" onchange="updateActualDate(this.getAttribute(\'data-tid\'), this.value)"></td>';
