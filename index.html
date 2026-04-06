@@ -1984,7 +1984,7 @@ function renderScheduleTable(tasks) {
       }
 
       // 🌟 追加：実施日の処理（日付入力フォーム用にフォーマットを整えます）
-      var actualDateVal = t.actual_date ? safeDate(t.actual_date) : '';
+      var actualDateVal = t.actual_date ? t.actual_date.split('T')[0] : '';
 
       var metiMark = isMeti ? ' <span style="color:var(--red);font-size:10px">&#9733;METI</span>' : '';
       var noStr = String(i + 1);
@@ -1996,7 +1996,7 @@ function renderScheduleTable(tasks) {
       var cat = esc(t.task_category || '--');
       var sts = t.status || '--';
       var rowClass = sts === '完了' ? ' class="row-done"' : '';
-      var actualDateVal = t.actual_date ? safeDate(t.actual_date) : '';
+      var actualDateVal = t.actual_date ? t.actual_date.split('T')[0] : '';
       html += '<tr' + rowClass + '>';
       html += '<td style="font-family:var(--mono);font-size:12px;color:var(--gray4)">' + noStr + '</td>';
       html += '<td><span class="tag ' + cc + '">' + cat + '</span></td>';
