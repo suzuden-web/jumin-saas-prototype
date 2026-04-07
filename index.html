@@ -1401,6 +1401,7 @@ function runMetiCheck() {
       recording_planned: document.getElementById('recording_planned').checked ? 'TRUE' : 'FALSE'
     };
     showToast('保存中...', 'success');
+    console.log('notice_date送信値:', data.notice_date);
     callGAS('saveSession', data)
       .then(function(res) {
         state.session = data;
