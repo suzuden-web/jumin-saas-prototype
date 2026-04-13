@@ -1076,12 +1076,12 @@ for (var i = 0; i < inputs.length; i++) {
       el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray4);font-size:13px">タスクがありません。初期設定を完了してください。</div>';
       return;
     }
-    var html = '<table class="dt"><thead><tr><th>タスク</th><th>担当者</th><th>期限</th><th>状況</th></tr></thead><tbody>';
+    var html = '<table class="dt"><thead><tr><th>タスク</th><th>担当者</th><th>実施日</th><th>期限</th><th>状況</th></tr></thead><tbody>';
     for (var i = 0; i < tasks.length; i++) {
       var t = tasks[i];
       var sc = t.status === '完了' ? 't-g' : t.status === '進行中' ? 't-a' : 't-gr';
       var dashRowClass = t.status === '完了' ? ' class="row-done"' : '';
-      html += '<tr' + dashRowClass + '><td>' + esc(t.task_name || '--') + '</td><td style="color:var(--gray5);font-size:12px">' + esc(t.assignee || '--') + '</td><td>' + esc(safeDate(t.deadline) || '--') + '</td><td><span class="tag ' + sc + '">' + esc(t.status || '--') + '</span></td></tr>';
+      html += '<tr' + dashRowClass + '><td>' + esc(t.task_name || '--') + '</td><td style="color:var(--gray5);font-size:12px">' + esc(t.assignee || '--') + '</td><td style="color:var(--gray5);font-size:12px">' + esc(safeDate(t.actual_date) || '--') + '</td><td>' + esc(safeDate(t.deadline) || '--') + '</td><td><span class="tag ' + sc + '">' + esc(t.status || '--') + '</span></td></tr>';
     }
     html += '</tbody></table>';
     el.innerHTML = html;
