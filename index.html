@@ -1736,23 +1736,25 @@ html += '<div style="position:sticky;left:0;z-index:5;width:' + LABEL_W + 'px;mi
       console.log('bar', i, 'barStart:'+barStart, 'barLen:'+barLen, 'workStart:'+workStart, 'workEnd:'+workEnd);
       var barLeft = barStart * DAY_W + 2;
       var barW    = Math.max(DAY_W - 4, barLen * DAY_W - 4);
-var isDeadline = isMeti; // is_meti_required と同値で初期化
 　　html += '<div class="gantt-bar"'
     + ' data-tid="' + tid + '"'
     + ' data-start="' + workStart + '"'
     + ' data-end="' + workEnd + '"'
-    + ' data-is-deadline="' + isDeadline + '"'
             + ' data-day-w="' + DAY_W + '"'
             + ' data-days-before="' + DAYS_BEFORE + '"'
             + ' data-done="' + isDone + '"'
             + ' style="position:absolute;left:' + barLeft + 'px;top:8px;width:' + barW + 'px;height:24px;'
             + 'background:' + barColor + ';border-radius:4px;opacity:' + barOpacity + ';z-index:3;'
-            + 'display:flex;align-items:center;justify-content:flex-start;cursor:' + (isDeadline ? 'not-allowed' : 'default') + ';user-select:none">'
+            + 'display:flex;align-items:center;justify-content:flex-start;cursor:default;user-select:none">'
             // ★ ハンドルを左端に、border-radiusも左側に
-            + (isDeadline ? '' :
-    '<div class="gantt-resize-handle"'
-    + ' style="width:10px;height:100%;cursor:ew-resize;'
-    + 'background:rgba(255,255,255,0.5);border-radius:4px 0 0 4px;flex-shrink:0"></div>')
+            // 変更後
+            + '<div class="gantt-resize-handle-left"'
+            + ' style="width:10px;height:100%;cursor:ew-resize;'
+            + 'background:rgba(255,255,255,0.5);border-radius:4px 0 0 4px;flex-shrink:0"></div>'
+            + '<div style="flex:1"></div>'
+            + '<div class="gantt-resize-handle-right"'
+            + ' style="width:10px;height:100%;cursor:ew-resize;'
+            + 'background:rgba(255,255,255,0.5);border-radius:0 4px 4px 0;flex-shrink:0"></div>'
             + '</div>';
                 }
 
@@ -1782,77 +1784,92 @@ html += '<span style="color:var(--blue)">※バー左端をドラッグして作
   initGanttDrag(); // innerHTML確定後に呼ぶ
 }
 
+// 変更後
 function initGanttDrag() {
   var bars = document.querySelectorAll('#gantt-container .gantt-bar');
   for (var i = 0; i < bars.length; i++) {
     (function(bar) {
-      if (bar.getAttribute('data-is-deadline') === 'true') return;
-      var handle = bar.querySelector('.gantt-resize-handle');
-      if (!handle) return;
+      var leftHandle  = bar.querySelector('.gantt-resize-handle-left');
+      var rightHandle = bar.querySelector('.gantt-resize-handle-right');
 
-      handle.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+      // 左端ハンドル：開始日変更（終了日固定）
+      if (leftHandle) {
+        leftHandle.addEventListener('mousedown', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          var DAY_W       = parseInt(bar.getAttribute('data-day-w'))      || 28;
+          var DAYS_BEFORE = parseInt(bar.getAttribute('data-days-before')) || 40;
+          var startX      = e.clientX;
+          var workStart   = parseInt(bar.getAttribute('data-start'));
+          var workEnd     = parseInt(bar.getAttribute('data-end'));
+          var tid         = bar.getAttribute('data-tid');
+          var currentStart = workStart;
+          document.body.style.cursor = 'ew-resize';
+          document.body.style.userSelect = 'none';
 
-        var DAY_W       = parseInt(bar.getAttribute('data-day-w'))      || 28;
-        var DAYS_BEFORE = parseInt(bar.getAttribute('data-days-before')) || 40;
-        var startX      = e.clientX;
-        var workStart   = parseInt(bar.getAttribute('data-start'));
-        var workEnd     = parseInt(bar.getAttribute('data-end'));
-        var tid         = bar.getAttribute('data-tid');
-        var currentStart = workStart;
-
-        // バーの現在のleft値を取得
-        var origLeft  = parseInt(bar.style.left) || 0;
-        var origWidth = bar.offsetWidth;
-
-        document.body.style.cursor    = 'ew-resize';
-        document.body.style.userSelect = 'none';
-
-        function onMove(ev) {
-          var dx = ev.clientX - startX;
-          var dayDelta = Math.round(dx / DAY_W);
-          var newStart = workStart + dayDelta;
-
-          // 終了日を超えて右にはいけない（最低1日分）
-          if (newStart > workEnd) newStart = workEnd;
-
-          currentStart = newStart;
-
-          // バーの左端位置と幅を更新
-          var newBarStart = Math.min(newStart, workEnd) + DAYS_BEFORE;
-          var newBarEnd   = Math.max(newStart, workEnd) + DAYS_BEFORE;
-          var newBarLen   = newBarEnd - newBarStart + 1;
-          var newLeft  = newBarStart * DAY_W + 2;
-          var newWidth = Math.max(DAY_W - 4, newBarLen * DAY_W - 4);
-
-          bar.style.left  = newLeft  + 'px';
-          bar.style.width = newWidth + 'px';
-          bar.setAttribute('data-start', newStart);
-        }
-
-        function onUp() {
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup',   onUp);
-          document.body.style.cursor    = '';
-          document.body.style.userSelect = '';
-
-          if (currentStart !== workStart) {
-            saveGanttPeriod(tid, currentStart, workEnd);
+          function onMove(ev) {
+            var dx = ev.clientX - startX;
+            var dayDelta = Math.round(dx / DAY_W);
+            var newStart = workStart + dayDelta;
+            if (newStart > workEnd) newStart = workEnd;
+            currentStart = newStart;
+            var newBarStart = Math.min(newStart, workEnd) + DAYS_BEFORE;
+            var newBarEnd   = Math.max(newStart, workEnd) + DAYS_BEFORE;
+            var newBarLen   = newBarEnd - newBarStart + 1;
+            bar.style.left  = (newBarStart * DAY_W + 2) + 'px';
+            bar.style.width = Math.max(DAY_W - 4, newBarLen * DAY_W - 4) + 'px';
+            bar.setAttribute('data-start', newStart);
           }
-        }
+          function onUp() {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            if (currentStart !== workStart) saveGanttPeriod(tid, currentStart, workEnd);
+          }
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      }
 
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup',   onUp);
-      });
+      // 右端ハンドル：終了日変更（開始日固定）
+      if (rightHandle) {
+        rightHandle.addEventListener('mousedown', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          var DAY_W       = parseInt(bar.getAttribute('data-day-w'))      || 28;
+          var DAYS_BEFORE = parseInt(bar.getAttribute('data-days-before')) || 40;
+          var startX      = e.clientX;
+          var workStart   = parseInt(bar.getAttribute('data-start'));
+          var workEnd     = parseInt(bar.getAttribute('data-end'));
+          var tid         = bar.getAttribute('data-tid');
+          var currentEnd = workEnd;
+          document.body.style.cursor = 'ew-resize';
+          document.body.style.userSelect = 'none';
+
+          function onMove(ev) {
+            var dx = ev.clientX - startX;
+            var dayDelta = Math.round(dx / DAY_W);
+            var newEnd = workEnd + dayDelta;
+            if (newEnd < workStart) newEnd = workStart;
+            currentEnd = newEnd;
+            var newBarStart = Math.min(workStart, newEnd) + DAYS_BEFORE;
+            var newBarEnd   = Math.max(workStart, newEnd) + DAYS_BEFORE;
+            var newBarLen   = newBarEnd - newBarStart + 1;
+            bar.style.width = Math.max(DAY_W - 4, newBarLen * DAY_W - 4) + 'px';
+            bar.setAttribute('data-end', newEnd);
+          }
+          function onUp() {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            if (currentEnd !== workEnd) saveGanttPeriod(tid, workStart, currentEnd);
+          }
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      }
     })(bars[i]);
   }
-}
-
-function saveGanttPeriod(taskId, workStart, workEnd) {
-  callGAS('updateTaskPeriod', { taskId: taskId, workStart: workStart, workEnd: workEnd })
-    .then(function() { showToast('作業期間を更新しました', 'success'); })
-    .catch(function(err) { showToast('更新失敗: ' + (err.message || ''), 'error'); });
 }
 
   // ══════════════════════════════════════════════════════════════
