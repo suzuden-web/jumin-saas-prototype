@@ -2083,20 +2083,20 @@ function updateAssignee(taskId, value) {
   for (var i = 0; i < state.tasks.length; i++) {
     if (state.tasks[i].task_id === taskId) { state.tasks[i].assignee = value; break; }
   }
-  callGAS('updateTaskField', { taskId: taskId, field: 'assignee', value: value })
+  callGAS('updateTaskField', { task_id: taskId, field: 'assignee', value: value })
     .then(function() { showToast('担当者を更新しました', 'success'); })
     .catch(function() { showToast('更新に失敗しました', 'error'); });
 }
 
   // 🌟 追加：実施日を裏側に保存するための新しい関数
   function updateActualDate(taskId, value) {
-    callGAS('updateTaskField', { taskId: taskId, field: 'actual_date', value: value })
+    callGAS('updateTaskField', { task_id: taskId, field: 'actual_date', value: value })
       .then(function() { showToast('実施日を更新しました', 'success'); })
       .catch(function() { showToast('更新に失敗しました', 'error'); });
   }
 
   function updateStatus(taskId, value) {
-    callGAS('updateTaskField', { taskId: taskId, field: 'status', value: value })
+    callGAS('updateTaskField', { task_id: taskId, field: 'status', value: value })
       .then(function() {
         showToast('ステータスを更新しました', 'success');
         loadSchedule();
