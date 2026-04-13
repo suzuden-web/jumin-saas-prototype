@@ -1784,6 +1784,12 @@ html += '<span style="color:var(--blue)">※バー左端をドラッグして作
   initGanttDrag(); // innerHTML確定後に呼ぶ
 }
 
+function saveGanttPeriod(taskId, workStart, workEnd) {
+  callGAS('updateTaskPeriod', { taskId: taskId, workStart: workStart, workEnd: workEnd })
+    .then(function() { showToast('作業期間を更新しました', 'success'); })
+    .catch(function(err) { showToast('更新失敗: ' + (err.message || ''), 'error'); });
+}
+
 // 変更後
 function initGanttDrag() {
   var bars = document.querySelectorAll('#gantt-container .gantt-bar');
@@ -1857,14 +1863,14 @@ function initGanttDrag() {
             bar.style.width = Math.max(DAY_W - 4, newBarLen * DAY_W - 4) + 'px';
             bar.setAttribute('data-end', newEnd);
           }
-          function onUp() {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            if (currentEnd !== workEnd) saveGanttPeriod(tid, workStart, currentEnd);
-          }
-          document.addEventListener('mousemove', onMove);
+            function onUp() {
+              document.removeEventListener('mousemove', onMove);
+              document.removeEventListener('mouseup', onUp);
+              document.body.style.cursor = '';
+              document.body.style.userSelect = '';
+              if (currentEnd !== workEnd) saveGanttPeriod(tid, workStart, currentEnd);
+            }
+            document.addEventListener('mousemove', onMove);
           document.addEventListener('mouseup', onUp);
         });
       }
