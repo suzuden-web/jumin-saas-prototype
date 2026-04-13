@@ -2030,7 +2030,7 @@ function renderScheduleTable(tasks) {
       html += '<td>' + taskName + metiMark + '</td>';
       
       // ① 担当者
-     html += '<td><input style="border:1px solid var(--gray2);border-radius:4px;padding:3px 6px;font-size:12px;width:80px" value="' + assignee + '" placeholder="担当者" data-tid="' + tid + '" html += '<td><input style="border:1px solid var(--gray2);border-radius:4px;padding:3px 6px;font-size:12px;width:80px" value="' + assignee + '" placeholder="担当者" data-tid="' + tid + '" onchange="updateAssignee(this.dataset.tid, this.value)"></td>';></td>';
+     html += '<td><input style="border:1px solid var(--gray2);border-radius:4px;padding:3px 6px;font-size:12px;width:80px" value="' + assignee + '" placeholder="担当者" data-tid="' + tid + '" onchange="updateAssignee(this.dataset.tid, this.value)"></td>';
       // 変更後
       var actualStyle = '';
       var isPosting = t.task_name === '開催案内ポスティング（住民宛）';
