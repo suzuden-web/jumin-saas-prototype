@@ -1076,12 +1076,12 @@ for (var i = 0; i < inputs.length; i++) {
       el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray4);font-size:13px">タスクがありません。初期設定を完了してください。</div>';
       return;
     }
-    var html = '<table class="dt"><thead><tr><th>タスク</th><th>期限</th><th>状況</th></tr></thead><tbody>';
+    var html = '<table class="dt"><thead><tr><th>タスク</th><th>担当者</th><th>期限</th><th>状況</th></tr></thead><tbody>';
     for (var i = 0; i < tasks.length; i++) {
       var t = tasks[i];
       var sc = t.status === '完了' ? 't-g' : t.status === '進行中' ? 't-a' : 't-gr';
       var dashRowClass = t.status === '完了' ? ' class="row-done"' : '';
-      html += '<tr' + dashRowClass + '><td>' + esc(t.task_name || '--') + '</td><td>' + esc(safeDate(t.deadline) || '--') + '</td><td><span class="tag ' + sc + '">' + esc(t.status || '--') + '</span></td></tr>';
+      html += '<tr' + dashRowClass + '><td>' + esc(t.task_name || '--') + '</td><td style="color:var(--gray5);font-size:12px">' + esc(t.assignee || '--') + '</td><td>' + esc(safeDate(t.deadline) || '--') + '</td><td><span class="tag ' + sc + '">' + esc(t.status || '--') + '</span></td></tr>';
     }
     html += '</tbody></table>';
     el.innerHTML = html;
@@ -2077,6 +2077,16 @@ function renderScheduleTable(tasks) {
       }
     }
   }
+// 追加
+
+function updateAssignee(taskId, value) {
+  for (var i = 0; i < state.tasks.length; i++) {
+    if (state.tasks[i].task_id === taskId) { state.tasks[i].assignee = value; break; }
+  }
+  callGAS('updateTaskField', { taskId: taskId, field: 'assignee', value: value })
+    .then(function() { showToast('担当者を更新しました', 'success'); })
+    .catch(function() { showToast('更新に失敗しました', 'error'); });
+}
 
   // 🌟 追加：実施日を裏側に保存するための新しい関数
   function updateActualDate(taskId, value) {
