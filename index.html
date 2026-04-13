@@ -2084,7 +2084,7 @@ function updateAssignee(taskId, value) {
     if (state.tasks[i].task_id === taskId) { state.tasks[i].assignee = value; break; }
   }
   callGAS('updateTaskField', { task_id: taskId, field: 'assignee', value: value })
-    .then(function() { showToast('担当者を更新しました', 'success'); })
+    .then(function() { showToast('担当者を更新しました', 'success'); loadDashboard(); })
     .catch(function() { showToast('更新に失敗しました', 'error'); });
 }
 
