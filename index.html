@@ -1736,20 +1736,23 @@ html += '<div style="position:sticky;left:0;z-index:5;width:' + LABEL_W + 'px;mi
       console.log('bar', i, 'barStart:'+barStart, 'barLen:'+barLen, 'workStart:'+workStart, 'workEnd:'+workEnd);
       var barLeft = barStart * DAY_W + 2;
       var barW    = Math.max(DAY_W - 4, barLen * DAY_W - 4);
-html += '<div class="gantt-bar"'
-            + ' data-tid="' + tid + '"'
-            + ' data-start="' + workStart + '"'
-            + ' data-end="' + workEnd + '"'
+var isDeadline = isMeti; // is_meti_required と同値で初期化
+　　html += '<div class="gantt-bar"'
+    + ' data-tid="' + tid + '"'
+    + ' data-start="' + workStart + '"'
+    + ' data-end="' + workEnd + '"'
+    + ' data-is-deadline="' + isDeadline + '"''
             + ' data-day-w="' + DAY_W + '"'
             + ' data-days-before="' + DAYS_BEFORE + '"'
             + ' data-done="' + isDone + '"'
             + ' style="position:absolute;left:' + barLeft + 'px;top:8px;width:' + barW + 'px;height:24px;'
             + 'background:' + barColor + ';border-radius:4px;opacity:' + barOpacity + ';z-index:3;'
-            + 'display:flex;align-items:center;justify-content:flex-start;cursor:default;user-select:none">'
+            + 'display:flex;align-items:center;justify-content:flex-start;cursor:' + (isDeadline ? 'not-allowed' : 'default') + ';user-select:none">'
             // ★ ハンドルを左端に、border-radiusも左側に
-            + '<div class="gantt-resize-handle"'
-            + ' style="width:10px;height:100%;cursor:ew-resize;'
-            + 'background:rgba(255,255,255,0.5);border-radius:4px 0 0 4px;flex-shrink:0"></div>'
+            + (isDeadline ? '' :
+    '<div class="gantt-resize-handle"'
+    + ' style="width:10px;height:100%;cursor:ew-resize;'
+    + 'background:rgba(255,255,255,0.5);border-radius:4px 0 0 4px;flex-shrink:0"></div>')
             + '</div>';
                 }
 
@@ -1771,7 +1774,7 @@ html += '<div class="gantt-bar"'
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--gray4);border-radius:3px;opacity:0.8"></span>作業期間</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--red);font-size:14px">◆</span>デッドライン（METI）</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--gray5);font-size:14px">◆</span>デッドライン</span>';
-html += '<span style="color:var(--blue)">※バー左端をドラッグして作業開始日を変更できます</span>';
+html += '<span style="color:var(--blue)">※バー左端をドラッグして作業開始日を変更できます（MEFIタスクは固定）</span>';
   html += '</div>';
   html += '</div>';
 
@@ -1783,6 +1786,7 @@ function initGanttDrag() {
   var bars = document.querySelectorAll('#gantt-container .gantt-bar');
   for (var i = 0; i < bars.length; i++) {
     (function(bar) {
+      if (bar.getAttribute('data-is-deadline') === 'true') return;
       var handle = bar.querySelector('.gantt-resize-handle');
       if (!handle) return;
 
