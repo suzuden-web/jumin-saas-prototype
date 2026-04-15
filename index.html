@@ -716,7 +716,9 @@ var ACTION_MAP = {
   'saveDraft':        { label: '下書き保存',             fn: 'saveDraft()',          sheets: 'なし(UserProperties)' },
   'loadDraft':        { label: '下書き読込',             fn: 'loadDraft()',          sheets: 'なし(UserProperties)' },
   'getUserEmail':     { label: 'ユーザーメール取得',     fn: 'getUserEmail()',       sheets: 'なし' },
-  'getSpreadsheetId': { label: 'スプレッドシートID取得', fn: 'getSpreadsheetId()',   sheets: 'なし' }
+  'getSpreadsheetId': { label: 'スプレッドシートID取得', fn: 'getSpreadsheetId()',   sheets: 'なし' },
+  'getGuideline':     { label: 'ガイドライン取得',       fn: 'getGuideline()',       sheets: 'なし(定数参照)' },
+  'saveJudgment':     { label: '判断記録保存',           fn: 'saveJudgment()',       sheets: 'judgment_log' }
 };
 
 function callGAS(action, data) {
