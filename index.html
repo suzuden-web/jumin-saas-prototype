@@ -1768,15 +1768,29 @@ html += '<div style="position:sticky;left:0;z-index:5;width:' + LABEL_W + 'px;mi
             + ' title="' + esc(safeDate(task.deadline)) + '">◆</div>';
     }
 
+    // 実施日マーカー（Green◆）
+    if (task.actual_date) {
+      var adDate = new Date(task.actual_date);
+      adDate.setHours(0, 0, 0, 0);
+      var adIdx = Math.round((adDate - startDate) / (1000 * 60 * 60 * 24));
+      if (adIdx >= 0 && adIdx < totalDays) {
+        var adLeft = adIdx * DAY_W + DAY_W / 2;
+        html += '<div style="position:absolute;left:' + adLeft + 'px;top:50%;transform:translate(-50%,-50%) translateY(10px);'
+              + 'font-size:14px;color:#22c55e;z-index:5;pointer-events:none"'
+              + ' title="実施日: ' + esc(task.actual_date) + '">◆</div>';
+      }
+    }
+
     html += '</div>'; // グリッド領域
     html += '</div>'; // 行
     }
 
   html += '<div style="display:flex;align-items:center;gap:16px;padding:10px 8px;font-size:11px;color:var(--gray5);border-top:1px solid var(--gray2);margin-top:4px;flex-wrap:wrap">';
-  html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--blue);border-radius:3px;opacity:0.8"></span>作業期間（METI）</span>';
+  html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--blue);border-radius:3px;opacity:0.8"></span>作業期間</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="display:inline-block;width:24px;height:12px;background:var(--gray4);border-radius:3px;opacity:0.8"></span>作業期間</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--red);font-size:14px">◆</span>デッドライン（METI）</span>';
   html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:var(--gray5);font-size:14px">◆</span>デッドライン</span>';
+html += '<span style="display:flex;align-items:center;gap:4px"><span style="color:#22c55e;font-size:14px">◆</span>実施日</span>';
 html += '<span style="color:var(--blue)">※バー左端をドラッグして作業開始日を変更できます（METIタスクは固定）</span>';
   html += '</div>';
   html += '</div>';
