@@ -407,6 +407,8 @@
               <div class="fg">
                 <div class="fgrp"><div class="flbl">発電所名称 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" id="plant_name" type="text" placeholder="例：奥羽山系太陽光発電所"></div>
                 <div class="fgrp"><div class="flbl">発電出力（kW） <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" id="capacity_kw" type="number" placeholder="例：4200"></div>
+                <div class="fgrp"><div class="flbl">電源種別（自動判定）</div><div class="fi" id="power_category_display" style="background:#f5f5f5;padding:8px;border-radius:4px;color:#555;">出力を入力すると自動表示</div></div>
+<div class="fgrp"><div class="flbl">環境アセスメント対象 <span class="fhint" style="font-size:11px;">※ユーザー最終判断</span></div><label style="display:flex;align-items:center;gap:8px;padding:8px 0;"><input type="checkbox" id="is_eia_target" onchange="checkEiaAlert()"><span>第一種事業（環境アセスメント対象）</span></label><div id="eia_alert" style="display:none;color:#c0392b;font-size:12px;margin-top:4px;">⚠ 自動判定と差異あり。配布距離の最終決定は市町村相談後。下記は参考値。</div></div>
                 <div class="fgrp"><div class="flbl">パネル枚数 <span class="rbdg">必須</span></div><input class="fi" id="panel_count" type="number" placeholder="例：8800"></div>
                 <div class="fgrp"><div class="flbl">パネル最高地上高（m） <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" id="panel_height_m" type="number" placeholder="例：3.2" step="0.1"></div>
                 <div class="fgrp"><div class="flbl">土地面積（m2） <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" id="land_area_m2" type="number" placeholder="例：52000"></div>
@@ -1425,7 +1427,11 @@ function runMetiCheck() {
     if (stepName === 'step1') {
       data = { company_name: v('company_name'), company_name_kana: v('company_name_kana'), representative_name: v('representative_name'), contact_address: v('contact_address'), contact_tel: v('contact_tel'), contact_email: v('contact_email'), operator_type: v('operator_type') };
     } else if (stepName === 'step2') {
-      data = { plant_name: v('plant_name'), location_prefecture: v('location_prefecture'), location_city: v('location_city'), location_address_detail: v('location_address_detail'), capacity_kw: v('capacity_kw'), panel_count: v('panel_count'), panel_height_m: v('panel_height_m'), land_area_m2: v('land_area_m2'), fip_fit_type: v('fip_fit_type'), certification_number: v('certification_number'), construction_start: v('construction_start'), construction_end: v('construction_end'), operation_start: v('operation_start') };
+      data = { plant_name: v('plant_name'), location_prefecture: v('location_prefecture'), location_city: v('location_city'), location_address_detail: v('location_address_detail'), capacity_kw: v('capacity_kw'), panel_count: v('panel_count'), panel_height_m: v('panel_height_m'), land_area_m2: v('land_area_m2'), fip_fit_type: v('fip_fit_type'), certification_number: v('certification_number'), construction_start: v('construction_start'), construction_end: v('construction_end'), operation_start: v('operation_start'),
+      power_category: document.getElementById('power_category_display').textContent,
+      is_eia_target: document.getElementById('is_eia_target').checked,
+      panel_manufacturer: v('panel_manufacturer')
+    };
     } else if (stepName === 'step3') {
       data = { session_date: v('session_date'), session_time: v('session_time'), session_venue_name: v('session_venue_name'), session_venue_address: v('session_venue_address'), notice_date: v('notice_date'), target_area_description: v('target_area_description'), person_in_charge: v('person_in_charge'), role_assignment: v('role_assignment'), distribution_method: v('distribution_method') };
     }
@@ -2465,6 +2471,30 @@ function exportGantt() {
       hint.style.color = 'var(--gray4)';
       hint.textContent = '説明会日とチラシ配布日を両方入力すると自動チェックします';
     }
+  }
+
+  function updatePowerCategory() {
+    var kw = parseFloat(document.getElementById('capacity_kw').value);
+    var cat = '';
+    if (!isNaN(kw)) {
+      if (kw < 50)         cat = '低圧';
+      else if (kw < 2000)  cat = '高圧';
+      else if (kw < 30000) cat = '特別高圧';
+      else if (kw < 40000) cat = '第二種事業';
+      else                 cat = '第一種事業';
+    }
+    var disp = document.getElementById('power_category_display');
+    if (disp) disp.textContent = cat || '出力を入力すると自動表示';
+    checkEiaAlert();
+  }
+
+  function checkEiaAlert() {
+    var kw = parseFloat(document.getElementById('capacity_kw').value);
+    var isEia = document.getElementById('is_eia_target').checked;
+    var alrt = document.getElementById('eia_alert');
+    if (!alrt) return;
+    var autoFirst = (!isNaN(kw) && kw >= 40000);
+    alrt.style.display = (isEia && !autoFirst) ? 'block' : 'none';
   }
 
   // ══════════════════════════════════════════════════════════════
