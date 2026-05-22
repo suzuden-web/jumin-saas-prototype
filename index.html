@@ -1184,7 +1184,7 @@ function runMetiCheck() {
         glLink += '<span class="gl-ref">' + esc(r.reference) + '</span>';
       }
 
-      var row = '<div class="meti-row ' + sv.cls + '">'
+      var row = '<div class="meti-row ' + sv.cls + '" data-rule-id="' + esc(r.rule_id) + '" onclick="openGuidelinePanel(\'' + esc(r.rule_id) + '\')" style="cursor:pointer">'
               + '<div class="meti-ic">' + sv.ic + '</div>'
               + '<div class="meti-body">'
               + '<div class="meti-header">'
@@ -1258,6 +1258,10 @@ function runMetiCheck() {
 
     var cl = document.getElementById('compliance-list');
     if (cl) cl.innerHTML = fullHtml;
+    (function() {
+      var mo = document.getElementById('guideline-modal-overlay');
+      if (mo) mo.onclick = function(e) { if (e.target === mo) closeGuidelinePanel(); };
+    })();
 
     var cm = document.getElementById('confirm-meti');
     if (cm) cm.innerHTML = fullHtml;
@@ -2607,6 +2611,109 @@ function importFromPdf() {
     goScreen('compliance');
     runMetiCheck();
   }
+  var _currentRuleId = null;
+    var _currentJudgment = null;
+
+    function openGuidelinePanel(ruleId) {
+      _currentRuleId = ruleId;
+      _currentJudgment = null;
+      document.getElementById('gp-rule-title').textContent = ruleId;
+      document.getElementById('gp-advice').textContent = '読み込み中...';
+      document.getElementById('gp-body').textContent = '読み込み中...';
+      document.getElementById('gp-section').textContent = '';
+      document.getElementById('gp-updated').textContent = '';
+      document.getElementById('gp-reason').value = '';
+      document.getElementById('gp-save-msg').style.display = 'none';
+      ['gp-j-ok','gp-j-ng','gp-j-hold'].forEach(function(id) {
+        document.getElementById(id).style.opacity = '1';
+      });
+      document.getElementById('guideline-modal-overlay').style.display = 'block';
+      callGAS('getGuideline', { ruleId: ruleId })
+        .then(function(res) {
+          if (!res) { document.getElementById('gp-advice').textContent = '取得エラー'; return; }
+          document.getElementById('gp-rule-title').textContent = ruleId + '：' + (res.sourceA ? res.sourceA.title : '');
+          var advEl = document.getElementById('gp-advice');
+          advEl.textContent = res.adviceText || '';
+          var sevColor = { BLOCK: 'var(--red-light)', CHECK: 'var(--amber-light)', INFO: 'var(--blue-light)', OK: 'var(--green-light)' };
+          advEl.style.background = sevColor[res.severity] || 'var(--gray0)';
+          if (res.sourceA) {
+            document.getElementById('gp-section').textContent = res.sourceA.section + '　権威：' + (res.sourceA.authority || '');
+            document.getElementById('gp-body').textContent = res.sourceA.body || '';
+            document.getElementById('gp-source-link').href = res.sourceA.sourceUrl || '#';
+            document.getElementById('gp-updated').textContent = '最終更新：' + (res.sourceA.lastUpdated || '');
+          }
+        })
+        .catch(function(err) {
+          document.getElementById('gp-advice').textContent = '取得エラー：' + err.message;
+        });
+    }
+
+    function closeGuidelinePanel() {
+      document.getElementById('guideline-modal-overlay').style.display = 'none';
+      _currentRuleId = null;
+      _currentJudgment = null;
+    }
+
+    function setJudgment(val) {
+      _currentJudgment = val;
+      var map = { OK: 'gp-j-ok', NG: 'gp-j-ng', HOLD: 'gp-j-hold' };
+      ['OK','NG','HOLD'].forEach(function(k) {
+        document.getElementById(map[k]).style.opacity = k === val ? '1' : '0.4';
+      });
+    }
+
+    function saveJudgmentFromPanel() {
+      // saveJudgment GAS実装後に接続
+      // callGAS('saveJudgment', { ruleId: _currentRuleId, userJudgment: _currentJudgment, userReason: document.getElementById('gp-reason').value });
+      document.getElementById('gp-save-msg').style.display = 'block';
+    }
+    
   </script>
   </body>
+<!-- 判断支援パネル モーダル -->
+<div id="guideline-modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto">
+  <div style="background:white;max-width:600px;margin:40px auto;border-radius:8px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
+    <div style="background:var(--blue);color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:11px;opacity:0.8;margin-bottom:2px">判断支援パネル</div>
+        <div id="gp-rule-title" style="font-size:16px;font-weight:700">--</div>
+      </div>
+      <button onclick="closeGuidelinePanel()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1">×</button>
+    </div>
+    <div style="padding:20px">
+      <!-- ①システム助言 -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:11px;font-weight:600;color:var(--gray5);text-transform:uppercase;margin-bottom:6px">① システムからの助言</div>
+        <div id="gp-advice" style="padding:12px;border-radius:6px;font-size:13px;line-height:1.6">--</div>
+      </div>
+      <!-- ②制度条文 -->
+      <div style="margin-bottom:16px;padding:14px;background:var(--gray0);border-radius:6px;border:1px solid var(--gray2)">
+        <div style="font-size:11px;font-weight:600;color:var(--gray5);text-transform:uppercase;margin-bottom:8px">② A. 制度条文（根拠）</div>
+        <div id="gp-section" style="font-size:11px;color:var(--gray4);margin-bottom:6px">--</div>
+        <div id="gp-body" style="font-size:13px;line-height:1.7;color:var(--text)">--</div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:12px">
+          <a id="gp-source-link" href="#" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none">📄 ガイドライン原本を開く</a>
+          <span id="gp-updated" style="font-size:11px;color:var(--gray4)">--</span>
+        </div>
+      </div>
+      <!-- ③現場知見 -->
+      <div style="margin-bottom:16px;padding:14px;background:var(--gray0);border-radius:6px;border:1px solid var(--gray2)">
+        <div style="font-size:11px;font-weight:600;color:var(--gray5);text-transform:uppercase;margin-bottom:8px">③ B. 現場知見（過去事例）</div>
+        <div style="font-size:13px;color:var(--gray4);font-style:italic">該当する過去事例はまだありません（蓄積後、自動的に類似事例を表示）</div>
+      </div>
+      <!-- ④判断 -->
+      <div style="padding:14px;background:#F0F7FF;border-radius:6px;border:1px solid #BFDBFE">
+        <div style="font-size:11px;font-weight:600;color:var(--gray5);text-transform:uppercase;margin-bottom:10px">④ あなたの判断</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button onclick="setJudgment('OK')" id="gp-j-ok" class="btn" style="flex:1;font-size:12px;padding:6px">✓ 問題なし</button>
+          <button onclick="setJudgment('NG')" id="gp-j-ng" class="btn" style="flex:1;font-size:12px;padding:6px;background:var(--red);border-color:var(--red)">✗ 要対応</button>
+          <button onclick="setJudgment('HOLD')" id="gp-j-hold" class="btn btn-o" style="flex:1;font-size:12px;padding:6px">⏸ 保留</button>
+        </div>
+        <textarea id="gp-reason" placeholder="判断理由（任意）" style="width:100%;height:64px;padding:8px;border:1px solid var(--gray3);border-radius:4px;font-size:12px;font-family:var(--sans);resize:vertical;box-sizing:border-box"></textarea>
+        <button onclick="saveJudgmentFromPanel()" id="gp-save-btn" class="btn" style="width:100%;margin-top:8px;font-size:13px" disabled>判断を記録（saveJudgment 実装後に有効化）</button>
+        <div id="gp-save-msg" style="font-size:12px;color:var(--green);margin-top:6px;display:none">記録しました</div>
+      </div>
+    </div>
+  </div>
+</div>
   </html>
