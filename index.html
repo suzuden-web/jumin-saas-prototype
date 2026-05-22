@@ -406,7 +406,7 @@
             <div class="fsec"><div class="fsec-t">発電設備</div>
               <div class="fg">
                 <div class="fgrp"><div class="flbl">発電所名称 <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" id="plant_name" type="text" placeholder="例：奥羽山系太陽光発電所"></div>
-                <div class="fgrp"><div class="flbl">発電出力（kW） <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" id="capacity_kw" type="number" placeholder="例：4200"></div>
+                <div class="fgrp"><div class="flbl">発電出力（kW） <span class="rbdg">必須</span><span class="mbdg">METI必須</span></div><input class="fi" id="capacity_kw" type="number" placeholder="例：4200" oninput="updatePowerCategory()"></div>
                 <div class="fgrp"><div class="flbl">電源種別（自動判定）</div><div class="fi" id="power_category_display" style="background:#f5f5f5;padding:8px;border-radius:4px;color:#555;">出力を入力すると自動表示</div></div>
 <div class="fgrp"><div class="flbl">環境アセスメント対象 <span class="fhint" style="font-size:11px;">※ユーザー最終判断</span></div><label style="display:flex;align-items:center;gap:8px;padding:8px 0;"><input type="checkbox" id="is_eia_target" onchange="checkEiaAlert()"><span>第一種事業（環境アセスメント対象）</span></label><div id="eia_alert" style="display:none;color:#c0392b;font-size:12px;margin-top:4px;">⚠ 自動判定と差異あり。配布距離の最終決定は市町村相談後。下記は参考値。</div></div>
                 <div class="fgrp"><div class="flbl">パネル枚数 <span class="rbdg">必須</span></div><input class="fi" id="panel_count" type="number" placeholder="例：8800"></div>
