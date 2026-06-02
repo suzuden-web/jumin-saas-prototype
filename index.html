@@ -1193,6 +1193,7 @@ function runMetiCheck() {
               + '</div>'
               + '<div class="meti-msg">' + esc(r.message) + '</div>'
               + (glLink ? '<div class="meti-gl">' + glLink + '</div>' : '')
+              + '<div style="margin-top:8px"><button class="btn btn-o" style="font-size:11px;padding:3px 10px" onclick="openGuidelinePanel(\'' + esc(r.rule_id) + '\',\'' + r.severity + '\')">詳細・判断を記録</button></div>'
               + '</div>'
               + '</div>';
 
@@ -2614,59 +2615,80 @@ function importFromPdf() {
   var _currentRuleId = null;
     var _currentJudgment = null;
 
-    function openGuidelinePanel(ruleId) {
-      _currentRuleId = ruleId;
-      _currentJudgment = null;
-      document.getElementById('gp-rule-title').textContent = ruleId;
-      document.getElementById('gp-advice').textContent = '読み込み中...';
-      document.getElementById('gp-body').textContent = '読み込み中...';
-      document.getElementById('gp-section').textContent = '';
-      document.getElementById('gp-updated').textContent = '';
-      document.getElementById('gp-reason').value = '';
-      document.getElementById('gp-save-msg').style.display = 'none';
-      ['gp-j-ok','gp-j-ng','gp-j-hold'].forEach(function(id) {
-        document.getElementById(id).style.opacity = '1';
+    function openGuidelinePanel(ruleId, severity) {
+    document.getElementById('gp-rule-title').textContent = ruleId;
+    document.getElementById('gp-advice').textContent = '読み込み中...';
+    document.getElementById('gp-body').textContent = '--';
+    document.getElementById('gp-section').textContent = '--';
+    document.getElementById('gp-updated').textContent = '--';
+    document.getElementById('gp-source-link').href = '#';
+    document.getElementById('gp-reason').value = '';
+    document.getElementById('gp-save-msg').style.display = 'none';
+    setJudgment(null);
+    document.getElementById('guideline-modal-overlay').style.display = 'block';
+    callGAS('getGuideline', { ruleId: ruleId })
+      .then(function(res) {
+        if (res.error) {
+          document.getElementById('gp-advice').textContent = '情報を取得できませんでした（' + res.error + '）';
+          return;
+        }
+        var sv = SEVERITY_MAP[res.severity] || SEVERITY_MAP['INFO'];
+        var adviceEl = document.getElementById('gp-advice');
+        adviceEl.textContent = '[' + sv.label + '] ' + (res.adviceText || '');
+        adviceEl.style.background = res.severity === 'BLOCK' ? 'var(--red-light)' :
+                                    res.severity === 'CHECK' ? 'var(--amber-light)' :
+                                    res.severity === 'INFO'  ? 'var(--blue-light)' : 'var(--green-light)';
+        var sa = res.sourceA || {};
+        document.getElementById('gp-section').textContent = sa.section || '--';
+        document.getElementById('gp-body').textContent    = sa.body    || '--';
+        document.getElementById('gp-updated').textContent = sa.lastUpdated ? '最終更新: ' + sa.lastUpdated : '--';
+        if (sa.sourceUrl) document.getElementById('gp-source-link').href = sa.sourceUrl;
+        // ruleId・severityをボタン用に保持
+        document.getElementById('gp-save-btn').dataset.ruleId   = ruleId;
+        document.getElementById('gp-save-btn').dataset.severity = res.severity || '';
+      })
+      .catch(function() {
+        document.getElementById('gp-advice').textContent = '取得エラー';
       });
-      document.getElementById('guideline-modal-overlay').style.display = 'block';
-      callGAS('getGuideline', { ruleId: ruleId })
-        .then(function(res) {
-          if (!res) { document.getElementById('gp-advice').textContent = '取得エラー'; return; }
-          document.getElementById('gp-rule-title').textContent = ruleId + '：' + (res.sourceA ? res.sourceA.title : '');
-          var advEl = document.getElementById('gp-advice');
-          advEl.textContent = res.adviceText || '';
-          var sevColor = { BLOCK: 'var(--red-light)', CHECK: 'var(--amber-light)', INFO: 'var(--blue-light)', OK: 'var(--green-light)' };
-          advEl.style.background = sevColor[res.severity] || 'var(--gray0)';
-          if (res.sourceA) {
-            document.getElementById('gp-section').textContent = res.sourceA.section + '　権威：' + (res.sourceA.authority || '');
-            document.getElementById('gp-body').textContent = res.sourceA.body || '';
-            document.getElementById('gp-source-link').href = res.sourceA.sourceUrl || '#';
-            document.getElementById('gp-updated').textContent = '最終更新：' + (res.sourceA.lastUpdated || '');
-          }
-        })
-        .catch(function(err) {
-          document.getElementById('gp-advice').textContent = '取得エラー：' + err.message;
-        });
-    }
+  }
 
-    function closeGuidelinePanel() {
-      document.getElementById('guideline-modal-overlay').style.display = 'none';
-      _currentRuleId = null;
-      _currentJudgment = null;
-    }
+  function closeGuidelinePanel() {
+    document.getElementById('guideline-modal-overlay').style.display = 'none';
+  }
 
-    function setJudgment(val) {
-      _currentJudgment = val;
-      var map = { OK: 'gp-j-ok', NG: 'gp-j-ng', HOLD: 'gp-j-hold' };
-      ['OK','NG','HOLD'].forEach(function(k) {
-        document.getElementById(map[k]).style.opacity = k === val ? '1' : '0.4';
-      });
+  function setJudgment(val) {
+    var map = { OK: 'gp-j-ok', NG: 'gp-j-ng', HOLD: 'gp-j-hold' };
+    var ids = ['gp-j-ok', 'gp-j-ng', 'gp-j-hold'];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById(ids[i]);
+      if (el) { el.style.opacity = '0.45'; el.style.outline = 'none'; }
     }
+    if (val && map[val]) {
+      var active = document.getElementById(map[val]);
+      if (active) { active.style.opacity = '1'; active.style.outline = '2px solid var(--blue)'; }
+    }
+    document.getElementById('gp-save-btn').dataset.judgment = val || '';
+  }
 
-    function saveJudgmentFromPanel() {
-      // saveJudgment GAS実装後に接続
-      // callGAS('saveJudgment', { ruleId: _currentRuleId, userJudgment: _currentJudgment, userReason: document.getElementById('gp-reason').value });
-      document.getElementById('gp-save-msg').style.display = 'block';
-    }
+  function saveJudgmentFromPanel() {
+    var btn = document.getElementById('gp-save-btn');
+    var judgment = btn.dataset.judgment || '';
+    if (!judgment) { showToast('判断を選択してください', 'error'); return; }
+    var data = {
+      plantId:      state.currentPlantId || '',
+      ruleId:       btn.dataset.ruleId   || '',
+      systemAdvice: btn.dataset.severity || '',
+      userJudgment: judgment,
+      userReason:   document.getElementById('gp-reason').value || ''
+    };
+    callGAS('saveJudgment', data)
+      .then(function() {
+        document.getElementById('gp-save-msg').style.display = 'block';
+        showToast('判断を記録しました', 'success');
+        setTimeout(closeGuidelinePanel, 800);
+      })
+      .catch(function(err) { showToast('記録に失敗しました: ' + err.message, 'error'); });
+  }
     
   </script>
   </body>
@@ -2710,7 +2732,7 @@ function importFromPdf() {
           <button onclick="setJudgment('HOLD')" id="gp-j-hold" class="btn btn-o" style="flex:1;font-size:12px;padding:6px">⏸ 保留</button>
         </div>
         <textarea id="gp-reason" placeholder="判断理由（任意）" style="width:100%;height:64px;padding:8px;border:1px solid var(--gray3);border-radius:4px;font-size:12px;font-family:var(--sans);resize:vertical;box-sizing:border-box"></textarea>
-        <button onclick="saveJudgmentFromPanel()" id="gp-save-btn" class="btn" style="width:100%;margin-top:8px;font-size:13px" disabled>判断を記録（saveJudgment 実装後に有効化）</button>
+        <button onclick="saveJudgmentFromPanel()" id="gp-save-btn" class="btn" style="width:100%;margin-top:8px;font-size:13px">判断を記録</button>
         <div id="gp-save-msg" style="font-size:12px;color:var(--green);margin-top:6px;display:none">記録しました</div>
       </div>
     </div>
