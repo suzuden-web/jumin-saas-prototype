@@ -1191,7 +1191,7 @@ function _buildUjHtml(userJudgment, userReason, judgedAt, severity) {
       var glLink = '';
       if (r.gl_chapter) {
         if (r.gl_url) {
-          glLink = '<a href="' + esc(r.gl_url) + '" target="_blank" rel="noopener" class="gl-link">'
+          glLink = '<a href="' + r.gl_url + '" target="_blank" rel="noopener" class="gl-link">'
                  + '出典：' + esc(r.gl_chapter) + ' ↗'
                  + '</a>';
         } else {
