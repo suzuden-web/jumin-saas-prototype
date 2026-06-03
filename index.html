@@ -247,17 +247,6 @@
 
   /* サマリーカードラベル変更（compliance画面）*/
   /* c-error → 要対応, c-warn → 要確認, c-ok → 適合+参考 */
-  .judge-wrap { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:6px; font-size:12px; }
-.jbadge { padding:2px 8px; border-radius:10px; font-weight:700; font-size:11px; }
-.jbadge-ok   { background:#d4edda; color:#155724; }
-.jbadge-ng   { background:#f8d7da; color:#721c24; }
-.jbadge-hold { background:#fff3cd; color:#856404; }
-.judge-reason { color:var(--gray5); max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.judge-at { color:var(--gray4); font-size:11px; margin-left:auto; }
-.judge-hist { width:100%; margin-top:4px; }
-.judge-hist summary { cursor:pointer; color:var(--gray5); font-size:11px; }
-.judge-hist ul { margin:4px 0 0 12px; padding:0; list-style:disc; }
-.judge-hist li { margin-bottom:2px; color:var(--gray6); }
   </style>
   </head>
   <body>
@@ -1179,29 +1168,6 @@ function runMetiCheck() {
       else oks++;
 
       // GL出典リンク（gl_chapterがある場合のみ）
-      var jLog = r.judgment_log || [];
-      var judgeHtml = '';
-      if (jLog.length > 0) {
-        var latest = jLog[jLog.length - 1];
-        var badgeCls = latest.userJudgment === 'OK' ? 'jbadge-ok'
-                     : latest.userJudgment === 'NG' ? 'jbadge-ng' : 'jbadge-hold';
-        var badgeLabel = latest.userJudgment === 'OK' ? '問題なし'
-                       : latest.userJudgment === 'NG' ? '要対応' : '保留';
-        judgeHtml = '<div class="judge-wrap">'
-          + '<span class="jbadge ' + badgeCls + '">' + esc(badgeLabel) + '</span>'
-          + '<span class="judge-reason">' + esc(latest.userReason || '') + '</span>'
-          + '<span class="judge-at">' + esc(latest.judgedAt) + '</span>';
-        if (jLog.length > 1) {
-          judgeHtml += '<details class="judge-hist"><summary>履歴 ' + jLog.length + '件</summary><ul>';
-          for (var hi = 0; hi < jLog.length; hi++) {
-            var h = jLog[hi];
-            var hl = h.userJudgment === 'OK' ? '問題なし' : h.userJudgment === 'NG' ? '要対応' : '保留';
-            judgeHtml += '<li><b>' + esc(hl) + '</b> ' + esc(h.judgedAt) + ' — ' + esc(h.userReason || '理由なし') + '</li>';
-          }
-          judgeHtml += '</ul></details>';
-        }
-        judgeHtml += '</div>';
-      }
       var glLink = '';
       if (r.gl_chapter) {
         if (r.gl_url) {
@@ -2407,7 +2373,7 @@ function exportGantt() {
     html += '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">';
     html += '<button class="btn btn-p" onclick="saveClusterData(\'' + cluster + '\')">このクラスターを保存</button>';
     html += '</div>';
-    html += judgeHtml + '</div></div>';
+    html += '</div></div>';
     document.getElementById('sd-panel').innerHTML = html;
   }
 
