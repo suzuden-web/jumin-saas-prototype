@@ -1153,6 +1153,26 @@ function runMetiCheck() {
     });
 }
 
+function _buildUjHtml(userJudgment, userReason, judgedAt, severity) {
+    if (!userJudgment) {
+      return '<span style="font-size:11px;color:var(--gray4);border:1px solid var(--gray3);border-radius:4px;padding:1px 8px">未承認</span>';
+    }
+    var LABELS = { OK: '問題なし', NG: '問題あり', HOLD: '保留' };
+    var COLORS = { OK: 'var(--green)', NG: 'var(--red)', HOLD: 'var(--amber)' };
+    var label  = LABELS[userJudgment] || userJudgment;
+    var color  = COLORS[userJudgment] || 'var(--gray4)';
+    var isConflict = (userJudgment === 'OK' && (severity === 'BLOCK' || severity === 'CHECK'))
+                  || (userJudgment === 'NG'  && (severity === 'OK'    || severity === 'INFO'));
+    var finalBadge = isConflict
+      ? ' <span style="font-size:10px;background:var(--blue);color:white;border-radius:3px;padding:1px 4px">最終</span>'
+      : '';
+    var dateStr = judgedAt ? String(judgedAt).substring(0, 16).replace('T', ' ') : '';
+    return '<span style="font-size:12px;font-weight:700;color:' + color + ';border:1px solid ' + color + ';border-radius:4px;padding:1px 8px">'
+         + esc(label) + finalBadge + '</span>'
+         + (dateStr ? ' <span style="font-size:11px;color:var(--gray4)">' + esc(dateStr) + '</span>' : '')
+         + (userReason ? '<div style="font-size:12px;color:var(--gray5);margin-top:2px;font-style:italic">' + esc(userReason) + '</div>' : '');
+  }
+
   function renderMetiResults(results) {
     var blocks = 0, checks = 0, infos = 0, oks = 0;
     var htmlMeti = '';
@@ -1184,6 +1204,7 @@ function runMetiCheck() {
         glLink += '<span class="gl-ref">' + esc(r.reference) + '</span>';
       }
 
+      var ujBorderColor = r.userJudgment === 'OK' ? 'var(--green)' : r.userJudgment === 'NG' ? 'var(--red)' : r.userJudgment === 'HOLD' ? 'var(--amber)' : 'var(--gray3)';
       var row = '<div class="meti-row ' + sv.cls + '" data-rule-id="' + esc(r.rule_id) + '" onclick="openGuidelinePanel(\'' + esc(r.rule_id) + '\')" style="cursor:pointer">'
               + '<div class="meti-ic">' + sv.ic + '</div>'
               + '<div class="meti-body">'
@@ -1192,6 +1213,10 @@ function runMetiCheck() {
               + '<span class="meti-badge sev-badge-' + r.severity + '">' + sv.label + '</span>'
               + '</div>'
               + '<div class="meti-msg">' + esc(r.message) + '</div>'
+              + '<div id="uj-' + esc(r.rule_id) + '" style="margin-top:6px;padding:6px 10px;background:var(--gray0);border-radius:4px;border-left:3px solid ' + ujBorderColor + '">'
+              + '<span style="font-size:11px;font-weight:600;color:var(--gray5)">あなたの承認：</span>'
+              + _buildUjHtml(r.userJudgment, r.userReason, r.judgedAt, r.severity)
+              + '</div>'
               + (glLink ? '<div class="meti-gl">' + glLink + '</div>' : '')
               + '<div style="margin-top:8px"><button class="btn btn-o" style="font-size:11px;padding:3px 10px" onclick="openGuidelinePanel(\'' + esc(r.rule_id) + '\',\'' + r.severity + '\')">詳細・判断を記録</button></div>'
               + '</div>'
@@ -2702,6 +2727,13 @@ function importFromPdf() {
     };
     callGAS('saveJudgment', data)
       .then(function() {
+        var ujEl = document.getElementById('uj-' + data.ruleId);
+        if (ujEl) {
+          var bColor = data.userJudgment === 'OK' ? 'var(--green)' : data.userJudgment === 'NG' ? 'var(--red)' : 'var(--amber)';
+          ujEl.style.borderLeftColor = bColor;
+          ujEl.innerHTML = '<span style="font-size:11px;font-weight:600;color:var(--gray5)">あなたの承認：</span>'
+                         + _buildUjHtml(data.userJudgment, data.userReason, new Date().toISOString(), data.systemAdvice);
+        }
         document.getElementById('gp-save-msg').style.display = 'block';
         showToast('判断を記録しました', 'success');
         setTimeout(closeGuidelinePanel, 800);
