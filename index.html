@@ -2650,6 +2650,10 @@ function importFromPdf() {
     document.getElementById('gp-section').textContent = '--';
     document.getElementById('gp-updated').textContent = '--';
     document.getElementById('gp-source-link').href = '#';
+    document.getElementById('gp-section-b').textContent = '--';
+    document.getElementById('gp-body-b').textContent = '--';
+    document.getElementById('gp-source-b-block').style.display = 'none';
+    document.getElementById('gp-source-b-wrap').style.display = 'none';
     document.getElementById('gp-reason').value = '';
     document.getElementById('gp-save-msg').style.display = 'none';
     setJudgment(null);
@@ -2680,6 +2684,19 @@ function importFromPdf() {
         document.getElementById('gp-body').textContent    = sa.body    || '--';
         document.getElementById('gp-updated').textContent = sa.lastUpdated ? '最終更新: ' + sa.lastUpdated : '--';
         if (sa.sourceUrl) document.getElementById('gp-source-link').href = sa.sourceUrl;
+        var sb = res.sourceB || {};
+        var blockB = document.getElementById('gp-source-b-block');
+        if (sb.section || sb.body) {
+          document.getElementById('gp-section-b').textContent = sb.section || '--';
+          document.getElementById('gp-body-b').textContent    = sb.body    || '--';
+          blockB.style.display = '';
+          if (sb.sourceUrl) {
+            document.getElementById('gp-source-link-b').href = sb.sourceUrl;
+            document.getElementById('gp-source-b-wrap').style.display = '';
+          }
+        } else {
+          blockB.style.display = 'none';
+        }
         // ruleId・severityをボタン用に保持
         document.getElementById('gp-save-btn').dataset.ruleId   = ruleId;
         document.getElementById('gp-save-btn').dataset.severity = res.severity || '';
@@ -2764,6 +2781,14 @@ function importFromPdf() {
         <div style="font-size:11px;font-weight:600;color:var(--gray5);text-transform:uppercase;margin-bottom:8px">② A. 制度条文（根拠）</div>
         <div id="gp-section" style="font-size:11px;color:var(--gray4);margin-bottom:6px">--</div>
         <div id="gp-body" style="font-size:13px;line-height:1.7;color:var(--text)">--</div>
+        <!-- sourceB 条文テキスト -->
+        <div id="gp-source-b-block" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--gray2)">
+          <div id="gp-section-b" style="font-size:11px;color:var(--gray4);margin-bottom:6px">--</div>
+          <div id="gp-body-b" style="font-size:13px;line-height:1.7;color:var(--text)">--</div>
+          <div id="gp-source-b-wrap" style="display:none;margin-top:8px">
+            <a id="gp-source-link-b" href="#" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none">📄 参考資料を開く</a>
+          </div>
+        </div>
         <div style="margin-top:10px;display:flex;align-items:center;gap:12px">
           <a id="gp-source-link" href="#" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none">📄 ガイドライン原本を開く</a>
           <span id="gp-updated" style="font-size:11px;color:var(--gray4)">--</span>
