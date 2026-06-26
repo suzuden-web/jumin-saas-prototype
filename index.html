@@ -3,7 +3,7 @@
   <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>住民説明会SaaS</title>
+  <title>DEDAI-JS</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
   :root {
@@ -254,8 +254,7 @@
     <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
     <aside class="sidebar" id="sidebar">
       <div class="sb-logo">
-        <div class="lm">Juuminsetsumeikai Assist<br>System</div>
-　　　　　<div class="ln" style="font-size:1.6em;font-weight:700;letter-spacing:2px">JAS</div>
+　　　　　<div class="ln" style="font-size:1.6em;font-weight:700;letter-spacing:2px">DEDAI-JS</div>
       </div>
       <div class="sb-proj" id="proj-info">
         <div class="pl">プロジェクト</div>
@@ -297,7 +296,7 @@
         <!-- ══ DASHBOARD ══════════════════════════════════ -->
         <div class="screen active" id="screen-dashboard">
           <div class="ph">
-            <div class="ph-title" id="dash-title">住民説明会SaaS</div>
+            <div class="ph-title" id="dash-title">DEDAI-JS</div>
             <div class="ph-sub" id="dash-sub">初期設定を完了してプロジェクトを開始してください</div>
           </div>
           <div class="sg">
@@ -911,7 +910,7 @@ for (var i = 0; i < inputs.length; i++) {
     document.getElementById('days-left').textContent = '--';
     document.getElementById('session-date-sub').textContent = '日程未設定';
     document.getElementById('task-progress').textContent = '--';
-    document.getElementById('dash-title').textContent = '住民説明会SaaS';
+    document.getElementById('dash-title').textContent = 'DEDAI-JS';
     document.getElementById('dash-sub').textContent = '初期設定を完了してプロジェクトを開始してください';
     var guide = document.getElementById('dash-guide');
     if (guide) guide.style.display = '';
@@ -989,7 +988,7 @@ for (var i = 0; i < inputs.length; i++) {
 
     if (state.plant) {
       document.getElementById('proj-sub').textContent = (state.plant.location_prefecture || '') + (state.plant.location_city || '') + ' ' + (state.plant.capacity_kw || '--') + 'kW';
-      document.getElementById('dash-title').textContent = state.plant.plant_name || '住民説明会SaaS';
+      document.getElementById('dash-title').textContent = state.plant.plant_name || 'DEDAI-JS';
     }
 
     if (state.session && state.session.session_date) {
