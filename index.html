@@ -691,7 +691,10 @@
   // GAS API通信ヘルパー（GitHub Pages用）
   //   ★ デプロイ後のWebApp URLに書き換えてください
   // ══════════════════════════════════════════════════════════════
-  var GAS_URL = 'https://script.google.com/macros/s/AKfycbyWltwCGb0TVGST50_AieQhd8nQIyG0Ty3JyhOmmHNzoN_ovvYbOzPta3xdquATm3pS/exec';
+  var GAS_URL_PROD = 'https://script.google.com/macros/s/AKfycbyWltwCGb0TVGST50_AieQhd8nQIyG0Ty3JyhOmmHNzoN_ovvYbOzPta3xdquATm3pS/exec';
+  var GAS_URL_TEST = 'https://script.google.com/macros/s/AKfycbyYVud0wpEzJYjohKYj-aglEOTvr2_LL_Iof65jJ83C4i21y1lgl2N9qn_bXaN3xfRVMQ/exec';
+  var IS_LOCAL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+  var GAS_URL = IS_LOCAL ? GAS_URL_TEST : GAS_URL_PROD;
  // ── アクション→日本語名＋関連情報マップ ──────────────
 var ACTION_MAP = {
   'saveOperator':     { label: '事業者情報の保存',       fn: 'saveOperator()',       sheets: '事業者情報' },
